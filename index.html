@@ -1,4 +1,4 @@
-﻿<html lang="tr">
+<html lang="tr">
 
 <head>
     <meta charset="UTF-8">
@@ -5417,6 +5417,7 @@ button.add-btn:active {
     margin: 0 4px;
 }
 
+
     </style>
 </head>
 
@@ -6479,335 +6480,322 @@ const styles = `
         }
 
         function generateYollukReportHTML() {
-            const dailyRate = parseFloat(document.getElementById("dailyRate").value) || 0;
-            const accommodationRate = parseFloat(document.getElementById("accommodationRate").value) || 0;
-            const selectedMonthOptions = Array.from(document.getElementById('yollukMonthFilter').selectedOptions);
-            const selectedMonths = selectedMonthOptions.map(opt => parseInt(opt.value, 10));
+    const dailyRate = parseFloat(document.getElementById("dailyRate").value) || 0;
+    const accommodationRate = parseFloat(document.getElementById("accommodationRate").value) || 0;
+    const selectedMonthOptions = Array.from(document.getElementById('yollukMonthFilter').selectedOptions);
+    const selectedMonths = selectedMonthOptions.map(opt => parseInt(opt.value, 10));
 
-            if (selectedMonths.length === 0) {
-                showToast("Lütfen en az bir rapor ayı seçin.", "warning");
-                return null;
+    if (selectedMonths.length === 0) {
+        showToast("Lütfen en az bir rapor ayı seçin.", "warning");
+        return null;
+    }
+
+    const selectAll = selectedMonths.includes(0);
+    const year = document.getElementById("budgetYear").value.toString();
+    const y1 = year[0] || '';
+    const y2 = year[1] || '';
+    const y3 = year[2] || '';
+    const y4 = year[3] || '';
+
+    const görevYeri = document.getElementById("görevYeri").value || "Sinop";
+    let allReportItems = [];
+    let totalDailyAmount = 0;
+    let totalAccommodationCost = 0;
+    let totalTransportCost = 0;
+    const oneDay = 864e5;
+
+    // --- Seyahat Kartlarını Döngüye Al ---
+    document.querySelectorAll(".travel-card").forEach(row => {
+        const type = row.querySelector('.gorev-tipi-select').value;
+        let taskStartDate, taskEndDate;
+
+        if (type === 'gunubirlik') {
+            const dateStr = row.querySelector(".travel-date").value;
+            if (!dateStr || isNaN(new Date(dateStr).getTime())) return;
+            taskStartDate = taskEndDate = new Date(dateStr);
+        } else {
+            const startDateStr = row.querySelector(".coklu-start-date").value;
+            const endDateStr = row.querySelector(".coklu-end-date").value;
+            if (!startDateStr || !endDateStr || isNaN(new Date(startDateStr).getTime()) || isNaN(new Date(endDateStr).getTime())) return;
+            taskStartDate = new Date(startDateStr);
+            taskEndDate = new Date(endDateStr);
+        }
+
+        if (!selectAll) {
+            const month = taskStartDate.getMonth() + 1;
+            if (!selectedMonths.includes(month)) return;
+        }
+
+        // Taşıtları Topla
+        const allTransportsForRow = [];
+        row.querySelectorAll('.transport-entry').forEach((tr, index) => {
+            allTransportsForRow.push({
+                id: `transport-${row.id}-${index}`,
+                date: tr.querySelector('.transport-date').value,
+                type: tr.querySelector('.transport-type').value,
+                description: tr.querySelector('.transport-description').value,
+                cost: parseFloat(tr.querySelector('.transport-cost').value) || 0
+            });
+        });
+
+        const processedTransportIds = new Set();
+
+        // --- GÜNÜBİRLİK HESABI ---
+        if (type === 'gunubirlik') {
+            const allowance = calculateAllowance(row.querySelector(".travel-start").value, row.querySelector(".travel-end").value, false);
+            let rawRoute = row.querySelector(".travel-route").value;
+            
+            // Günübirlik temizlik: Ayırıcıları standartlaştır
+            // Kullanıcı virgül, tire veya slaş kullanmışsa hepsini büyüktür (>) işaretine çevirir
+            let cleanRoute = rawRoute.replace(/[-/,]+/g, ' > '); 
+            
+            // Eğer kullanıcı sadece "Kastamonu" yazdıysa "Sinop > Kastamonu > Sinop" yapar
+            let route = (cleanRoute && !cleanRoute.includes(görevYeri)) ? `${görevYeri} > ${cleanRoute} > ${görevYeri}` : cleanRoute;
+
+            let attachedTransport = null;
+            if (allTransportsForRow.length > 0) {
+                attachedTransport = {
+                    type: allTransportsForRow.map(t => `${t.type} (${t.description})`).join(', '),
+                    amount: allTransportsForRow.reduce((sum, t) => sum + t.cost, 0)
+                };
+                allTransportsForRow.forEach(t => processedTransportIds.add(t.id));
             }
 
-            const selectAll = selectedMonths.includes(0);
-            // Bütçe Yılı Kutucukları için Veri Hazırlığı
-            const year = document.getElementById("budgetYear").value.toString();
-            const y1 = year[0] || '';
-            const y2 = year[1] || '';
-            const y3 = year[2] || '';
-            const y4 = year[3] || '';
+            if ((allowance && allowance.val > 0) || attachedTransport) {
+                allReportItems.push({
+                    sortDate: taskStartDate,
+                    type: 'gundelik',
+                    date: taskStartDate,
+                    route: route,
+                    start: row.querySelector(".travel-start").value,
+                    end: row.querySelector(".travel-end").value,
+                    dayCount: allowance.str,
+                    dailyRate: dailyRate,
+                    dailyAmount: dailyRate * allowance.val,
+                    attachedTransport: attachedTransport
+                });
+            }
+        } 
+        // --- ÇOKLU GÜN HESABI (ZİNCİRLEME & STANDART) ---
+        else {
+            if (taskEndDate.getTime() < taskStartDate.getTime()) return;
 
-            const görevYeri = document.getElementById("görevYeri").value || "Sinop";
-            let allReportItems = [];
-            let totalDailyAmount = 0;
-            let totalAccommodationCost = 0;
-            let totalTransportCost = 0;
-            const oneDay = 864e5;
+            const destination = row.querySelector(".travel-route").value;
+            
+            // === AKILLI AYIRICI ===
+            // Tire (-), Virgül (,), Taksim (/), Büyüktür (>) işaretlerinin hepsini kabul eder.
+            // Örn: "Karabük, Bartın" veya "Karabük/Bartın" veya "Karabük - Bartın" hepsi çalışır.
+            const stops = destination.split(/[-/>,]+/).map(s => s.trim()).filter(s => s && s.toLowerCase() !== görevYeri.toLowerCase());
+            
+            const totalDays = Math.round((taskEndDate - taskStartDate) / oneDay) + 1;
+            const totalAccommodation = parseFloat(row.querySelector(".coklu-accommodation").value) || 0;
+            const geceSayisi = Math.max(1, totalDays - 1);
+            
+            let currentLoopDate = new Date(taskStartDate);
+            let currentLocation = görevYeri; 
+            let stopIndex = 0; 
 
-            // --- Veri Hesaplama Döngüsü ---
-            document.querySelectorAll(".travel-card").forEach(row => {
-                const type = row.querySelector('.gorev-tipi-select').value;
-                let taskStartDate, taskEndDate;
-                if (type === 'gunubirlik') {
-                    const dateStr = row.querySelector(".travel-date").value;
-                    if (!dateStr || isNaN(new Date(dateStr).getTime())) return;
-                    taskStartDate = taskEndDate = new Date(dateStr)
-                } else {
-                    const startDateStr = row.querySelector(".coklu-start-date").value;
-                    const endDateStr = row.querySelector(".coklu-end-date").value;
-                    if (!startDateStr || !endDateStr || isNaN(new Date(startDateStr).getTime()) || isNaN(new Date(endDateStr).getTime())) return;
-                    taskStartDate = new Date(startDateStr);
-                    taskEndDate = new Date(endDateStr)
+            for (let i = 0; i < totalDays; i++) {
+                let routeText = "";
+                
+                // --- SON GÜN (DÖNÜŞ) ---
+                if (i === totalDays - 1) {
+                    // Kalan şehirler varsa hepsini ekle (Zonguldak > Bolu > Sinop gibi)
+                    let remainingStops = "";
+                    if (stopIndex < stops.length) {
+                        remainingStops = " > " + stops.slice(stopIndex).join(" > ");
+                    }
+                    // "(Dönüş)" ibaresi silindi, sadece temiz rota
+                    routeText = `${currentLocation}${remainingStops} > ${görevYeri}`;
+                } 
+                // --- ARA GÜNLER ---
+                else {
+                    if (stopIndex < stops.length) {
+                        const nextStop = stops[stopIndex];
+                        routeText = `${currentLocation} > ${nextStop}`;
+                        currentLocation = nextStop;
+                        stopIndex++;
+                    } else {
+                        // Durak bitti, otelde kalıyor
+                        routeText = `${currentLocation} (Mahallinde)`;
+                    }
                 }
-                if (!selectAll) {
-                    const month = taskStartDate.getMonth() + 1;
-                    if (!selectedMonths.includes(month)) return
+
+                // Taşıt
+                const dateStr = currentLoopDate.toISOString().split('T')[0];
+                const daysTransports = allTransportsForRow.filter(t => t.date === dateStr);
+                let attachedTransport = null;
+                if (daysTransports.length > 0) {
+                    attachedTransport = {
+                        type: daysTransports.map(t => `${t.type} (${t.description})`).join(', '),
+                        amount: daysTransports.reduce((sum, t) => sum + t.cost, 0)
+                    };
+                    daysTransports.forEach(t => processedTransportIds.add(t.id));
                 }
-                const allTransportsForRow = [];
-                row.querySelectorAll('.transport-entry').forEach((tr, index) => {
-                    allTransportsForRow.push({
-                        id: `transport-${row.id}-${index}`,
-                        date: tr.querySelector('.transport-date').value,
-                        type: tr.querySelector('.transport-type').value,
-                        description: tr.querySelector('.transport-description').value,
-                        cost: parseFloat(tr.querySelector('.transport-cost').value) || 0
-                    })
+
+                // Konaklama (Son geceye toplam yazar)
+                let attachedExpense = null;
+                if (i === totalDays - 2 && totalAccommodation > 0) {
+                    const limit = dailyRate * accommodationRate * geceSayisi;
+                    const reimbursable = Math.min(totalAccommodation, limit);
+                    attachedExpense = {
+                        type: `Konaklama (${geceSayisi} Gece Toplamı)`,
+                        amount: reimbursable
+                    };
+                }
+
+                allReportItems.push({
+                    sortDate: new Date(currentLoopDate),
+                    type: 'gundelik',
+                    date: new Date(currentLoopDate),
+                    route: routeText,
+                    dayCount: 1,
+                    dailyRate: dailyRate,
+                    dailyAmount: dailyRate,
+                    attachedTransport: attachedTransport,
+                    attachedExpense: attachedExpense
                 });
 
-                // Günübirlik Hesaplaması
-                if (type === 'gunubirlik') {
-                    const allowance = calculateAllowance(row.querySelector(".travel-start").value, row.querySelector(".travel-end").value, false);
-                    const rawRoute = row.querySelector(".travel-route").value;
-                    let route = (rawRoute && !rawRoute.includes('-')) ? `${görevYeri}-${rawRoute}-${görevYeri}` : rawRoute;
-                    let attachedTransport = null;
-                    if (allTransportsForRow.length > 0) {
-                        attachedTransport = {
-                            type: allTransportsForRow.map(t => `${t.type} (${t.description})`).join(', '),
-                            amount: allTransportsForRow.reduce((sum, t) => sum + t.cost, 0)
-                        }
-                    };
-                    if (allowance && allowance.val > 0 || attachedTransport) {
-                        allReportItems.push({
-                            sortDate: taskStartDate,
-                            type: 'gundelik',
-                            date: taskStartDate,
-                            route: route,
-                            start: row.querySelector(".travel-start").value,
-                            end: row.querySelector(".travel-end").value,
-                            dayCount: allowance.str,
-                            dailyRate: dailyRate,
-                            dailyAmount: dailyRate * allowance.val,
-                            attachedTransport: attachedTransport
-                        })
-                    }
-                } else {
-                    // Çoklu Gün Hesaplaması
-                    if (taskEndDate.getTime() < taskStartDate.getTime()) return;
-                    const processedTransportIds = new Set;
-                    const startDateStr = taskStartDate.toISOString().split('T')[0];
-                    const endDateStr = taskEndDate.toISOString().split('T')[0];
-                    const gidisTransport = allTransportsForRow.filter(t => t.date === startDateStr);
-                    const donusTransport = allTransportsForRow.filter(t => t.date === endDateStr);
-                    const aggregateTransport = transports => {
-                        if (transports.length === 0) return null;
-                        transports.forEach(t => processedTransportIds.add(t.id));
-                        return {
-                            type: transports.map(t => `${t.type} (${t.description})`).join(', '),
-                            amount: transports.reduce((sum, t) => sum + t.cost, 0)
-                        }
-                    };
-                    const attachedGidisTransport = aggregateTransport(gidisTransport);
-                    const attachedDonusTransport = aggregateTransport(donusTransport);
-                    const gidisSuresi = parseInt(row.querySelector(".coklu-gidis-suresi").value) || 1;
-                    const donusSuresi = parseInt(row.querySelector(".coklu-donus-suresi").value) || 1;
-                    const totalDays = Math.round((taskEndDate - taskStartDate) / oneDay) + 1;
-                    const mahalSuresi = Math.max(0, totalDays - gidisSuresi - donusSuresi);
-                    const destination = row.querySelector(".travel-route").value;
-                    const totalAccommodation = parseFloat(row.querySelector(".coklu-accommodation").value) || 0;
-                    const geceSayisi = totalDays - 1;
-
-                    if (gidisSuresi > 0) {
-                        let attachedExpense = null;
-                        if (mahalSuresi === 0 && geceSayisi > 0 && totalAccommodation > 0) {
-                            const maxAllowablePerNight = dailyRate * accommodationRate;
-                            const actualPerNight = totalAccommodation / geceSayisi;
-                            const reimbursablePerNight = Math.min(actualPerNight, maxAllowablePerNight);
-                            attachedExpense = {
-                                type: `Konaklama (${geceSayisi} Gece)`,
-                                amount: reimbursablePerNight * geceSayisi
-                            }
-                        }
-                        allReportItems.push({
-                            sortDate: taskStartDate,
-                            type: 'gundelik',
-                            date: taskStartDate,
-                            dateEnd: new Date(taskStartDate.getTime() + (gidisSuresi - 1) * oneDay),
-                            route: `${görevYeri} &gt; ${destination} (Gidiş)`,
-                            dayCount: gidisSuresi,
-                            dailyRate: dailyRate,
-                            dailyAmount: gidisSuresi * dailyRate,
-                            attachedTransport: attachedGidisTransport,
-                            attachedExpense: attachedExpense
-                        })
-                    }
-                    if (mahalSuresi > 0) {
-                        let attachedExpense = null;
-                        if (totalAccommodation > 0 && geceSayisi > 0) {
-                            const maxAllowablePerNight = dailyRate * accommodationRate;
-                            const actualPerNight = totalAccommodation / geceSayisi;
-                            const reimbursablePerNight = Math.min(actualPerNight, maxAllowablePerNight);
-                            attachedExpense = {
-                                type: `Konaklama (${geceSayisi} Gece)`,
-                                amount: reimbursablePerNight * geceSayisi
-                            }
-                        }
-                        allReportItems.push({
-                            sortDate: new Date(taskStartDate.getTime() + gidisSuresi * oneDay),
-                            type: 'gundelik',
-                            date: new Date(taskStartDate.getTime() + gidisSuresi * oneDay),
-                            dateEnd: new Date(taskStartDate.getTime() + (gidisSuresi + mahalSuresi - 1) * oneDay),
-                            route: `${destination} (Mahallinde)`,
-                            dayCount: mahalSuresi,
-                            dailyRate: dailyRate,
-                            dailyAmount: mahalSuresi * dailyRate,
-                            attachedExpense: attachedExpense
-                        })
-                    }
-                    if (donusSuresi > 0) {
-                        allReportItems.push({
-                            sortDate: new Date(taskEndDate.getTime() - (donusSuresi - 1) * oneDay),
-                            type: 'gundelik',
-                            date: new Date(taskEndDate.getTime() - (donusSuresi - 1) * oneDay),
-                            dateEnd: taskEndDate,
-                            route: `${destination} &gt; ${görevYeri} (Dönüş)`,
-                            dayCount: donusSuresi,
-                            dailyRate: dailyRate,
-                            dailyAmount: donusSuresi * dailyRate,
-                            attachedTransport: attachedDonusTransport
-                        })
-                    }
-                    allTransportsForRow.filter(t => !processedTransportIds.has(t.id)).forEach(t => allReportItems.push({
-                        sortDate: new Date(t.date),
-                        type: 'tasit',
-                        date: new Date(t.date),
-                        route: t.description,
-                        expenseType: t.type,
-                        expenseAmount: t.cost
-                    }))
-                }
-            });
-
-            allReportItems.sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime());
-
-            let reportRows = [];
-            allReportItems.forEach(item => {
-                const f = n => n ? n.toFixed(2).replace(".", ",") : "0,00";
-                let dateStr = item.date.toLocaleDateString("tr-TR");
-                if (item.dateEnd && item.date.getTime() !== item.dateEnd.getTime()) {
-                    dateStr = `${item.date.toLocaleDateString("tr-TR")} - ${item.dateEnd.toLocaleDateString("tr-TR")}`
-                }
-                if (item.type === 'gundelik') {
-                    totalDailyAmount += item.dailyAmount;
-                    const konaklamaTuru = item.attachedExpense ? item.attachedExpense.type : '';
-                    const konaklamaTutari = item.attachedExpense ? item.attachedExpense.amount : 0;
-                    totalAccommodationCost += konaklamaTutari;
-                    const tasitTuru = item.attachedTransport ? item.attachedTransport.type : '';
-                    const tasitTutari = item.attachedTransport ? item.attachedTransport.amount : 0;
-                    totalTransportCost += tasitTutari;
-                    const expenseTuru = [konaklamaTuru, tasitTuru].filter(Boolean).join(' + ');
-                    const expenseTutari = konaklamaTutari + tasitTutari;
-                    const total = item.dailyAmount + expenseTutari;
-                    reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td>${item.start || ''}</td><td>${item.end || ''}</td><td>${item.dayCount}</td><td>${f(item.dailyRate)}</td><td>${f(item.dailyAmount)}</td><td>${expenseTuru}</td><td>${f(expenseTutari)}</td><td></td><td></td><td>${f(total)}</td></tr>`)
-                } else if (item.type === 'tasit') {
-                    totalTransportCost += item.expenseAmount;
-                    reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td></td><td></td><td></td><td></td><td></td><td>${item.expenseType}</td><td>${f(item.expenseAmount)}</td><td></td><td></td><td>${f(item.expenseAmount)}</td></tr>`)
-                }
-            });
-            const grandTotal = totalDailyAmount + totalAccommodationCost + totalTransportCost;
-            let travelRowsHtml = reportRows.join("");
-            const maxRows = 15;
-            for (let i = reportRows.length; i < maxRows; i++) {
-                travelRowsHtml += `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
+                currentLoopDate.setDate(currentLoopDate.getDate() + 1);
             }
 
-            // --- YENİ TABLO YAPISI (DOSYA 80'DEN) ---
-            return `
-            <table class="main-content-table">
-<thead>
-    <!-- SATIR 1: İsim Soyisim Kısmı -->
-    <tr class="header-info-row">
-        <td colspan="1" class="label-cell">Adı Soyadı</td>
-        <td colspan="1" class="value-cell left-align">${document.getElementById("fullName").value}</td>
-        <td colspan="6" rowspan="4" class="title-cell">YURTİÇİ / GEÇİCİ GÖREV YOLLUĞU BİLDİRİMİ</td>
-        <td colspan="4" class="value-cell" style="border-bottom: 1px solid transparent !important;"> </td> 
-    </tr>
-    
-    <!-- SATIR 2: Unvan Kısmı -->
-    <tr class="header-info-row">
-        <td colspan="1" class="label-cell">Unvanı</td>
-        <td colspan="1" class="value-cell left-align">${document.getElementById("title").value}</td>
-        <td colspan="4" class="value-cell" style="border-top: 1px solid transparent !important;"> </td>
-    </tr>
-    
-    <!-- SATIR 3: Derece ve Daire Kısmı -->
-    <tr class="header-info-row">
-        <td colspan="1" class="label-cell">Aylık Kadro Derecesi ve<br>Ek Göstergesi</td>
-        <td colspan="1" class="value-cell left-align">${document.getElementById("degree").value}</td>
-        <td colspan="1" class="label-cell">Dairesi</td>
-        <td colspan="3" class="value-cell left-align">${document.getElementById("department").value}</td>
-    </tr>
-    
-    <!-- SATIR 4: Gündelik ve Yıl Kısmı -->
-    <tr class="header-info-row">
-        <td colspan="1" class="label-cell">Gündeliği</td>
-        <td colspan="1" class="value-cell left-align">${dailyRate.toFixed(2).replace(",", ".")} TL</td>
-        <td colspan="1" class="label-cell">Bütçe Yılı</td>
-        <td colspan="3" class="value-cell">
-            <div class="year-box-container" style="justify-content: center; padding: 0;">
-                <span class="year-box">${y1}</span>
-                <span class="year-box">${y2}</span>
-                <span class="year-box">${y3}</span>
-                <span class="year-box">${y4}</span>
-            </div>
-        </td>
-    </tr>
-
-    <!-- İŞTE BURASI! Duvarları kaydırdığımız yer -->
-<tr class="main-header">
-        <!-- Tarihler: %8 -->
-        <th rowspan="2" style="width: 8%;">Yolculuk ve Oturma Tarihleri</th>
-        
-        <!-- GÜNCELLEME: Güzergah: %25 (Genişletildi) -->
-        <th rowspan="2" style="width: 25%;">Nereden Nereye Yolculuk Edildiği veya Nerede Oturduğu</th>
-        
-        <!-- Saatler: %7 -->
-        <th colspan="2" style="width: 7%;">Hareket Saatleri</th>
-        
-        <!-- Gün: %3 -->
-        <th rowspan="2" style="width: 3%; line-height: 1;">Gün<br>Sayısı</th>
-        
-        <!-- Paralar: %11 -->
-        <th colspan="2" style="width: 11%;">GÜNDELİKLER</th>
-        
-        <!-- GÜNCELLEME: Taşıt Giderleri: %31.5 (Daraltıldı) -->
-        <th colspan="2" style="width: 31.5%;">TAŞIT VE ZORUNLU GİDERLER</th>
-        
-        <!-- Döviz: %6 -->
-        <th rowspan="2" style="width: 3%;">Dövizin Cinsi</th>
-        <th rowspan="2" style="width: 3%;">Kuru</th>
-        
-        <!-- Toplam: %8.5 -->
-        <th rowspan="2" style="width: 8.5%;">Toplam Tutar</th>
-    </tr>
-    <tr class="main-header">
-        <!-- Alt Başlıklar -->
-        <th style="width: 3.5%;">Gidiş</th>
-        <th style="width: 3.5%;">Dönüş</th>
-        
-        <th style="width: 5.5%;">Bir Günlüğü</th>
-        <th style="width: 5.5%;">Tutarı</th>
-        
-        <!-- GÜNCELLEME: "Çeşidi ve Mevkii" daraltıldı -->
-        <th style="width: 27.5%;">Çeşidi ve Mevkii</th>
-        <th style="width: 4%;">Tutarı</th>
-    </tr>
-</thead>
-                <tbody>
-                    ${travelRowsHtml}
-                </tbody>
-                <tfoot>
-                    <tr class="total-row">
-                        <td colspan="6" style="text-align:right; padding-right:10px;">TOPLAM</td>
-                        <td>${totalDailyAmount.toFixed(2).replace(".", ",")}</td>
-                        <td></td>
-                        <td>${(totalAccommodationCost + totalTransportCost).toFixed(2).replace(".", ",")}</td>
-                        <td colspan="2"></td>
-                        <td>${grandTotal.toFixed(2).replace(".", ",")}</td>
-                    </tr>
-                </tfoot>
-            </table>
-            
-            <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${grandTotal > 0 ? numberToWordsTR(grandTotal) : 'SIFIR'} harcamaya ait bildirimdir.</p>
-            
-            <table class="footer-table signature-section" style="margin-top:10px;">
-                <tr>
-                    <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
-                        <p>... / ... / ${document.getElementById("budgetYear").value}</p>
-                        <p>Birim Yetkilisi (*)</p>
-                        <p>(İmza)</p><br><br>
-                        <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("amirAdi").value}</span></p>
-                        <p>Unvanı : <span contenteditable="true">${document.getElementById("amirUnvani").value}</span></p>
-                    </td>
-                    <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
-                        <p>... / ... / ${document.getElementById("budgetYear").value}</p>
-                        <p>Bildirim Sahibi</p>
-                        <p>(İmza)</p><br><br>
-                        <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("fullName").value}</span></p>
-                        <p>Unvanı : <span contenteditable="true">${document.getElementById("title").value}</span></p>
-                    </td>
-                </tr>
-            </table>`
+            // Kalan manuel taşıtlar
+            allTransportsForRow.filter(t => !processedTransportIds.has(t.id)).forEach(t => {
+                allReportItems.push({
+                    sortDate: new Date(t.date),
+                    type: 'tasit',
+                    date: new Date(t.date),
+                    route: t.description,
+                    expenseType: t.type,
+                    expenseAmount: t.cost
+                });
+            });
         }
+    });
+
+    // --- Sıralama ve Tablo Oluşturma ---
+    allReportItems.sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime());
+
+    let reportRows = [];
+    allReportItems.forEach(item => {
+        const f = n => n ? n.toFixed(2).replace(".", ",") : "0,00";
+        let dateStr = item.date.toLocaleDateString("tr-TR");
+        
+        if (item.type === 'gundelik') {
+            totalDailyAmount += item.dailyAmount;
+            const konaklamaTuru = item.attachedExpense ? item.attachedExpense.type : '';
+            const konaklamaTutari = item.attachedExpense ? item.attachedExpense.amount : 0;
+            totalAccommodationCost += konaklamaTutari;
+            const tasitTuru = item.attachedTransport ? item.attachedTransport.type : '';
+            const tasitTutari = item.attachedTransport ? item.attachedTransport.amount : 0;
+            totalTransportCost += tasitTutari;
+
+            const expenseTuru = [konaklamaTuru, tasitTuru].filter(Boolean).join(' + ');
+            const expenseTutari = konaklamaTutari + tasitTutari;
+            const total = item.dailyAmount + expenseTutari;
+
+            reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td>${item.start || ''}</td><td>${item.end || ''}</td><td>${item.dayCount}</td><td>${f(item.dailyRate)}</td><td>${f(item.dailyAmount)}</td><td>${expenseTuru}</td><td>${f(expenseTutari)}</td><td></td><td></td><td>${f(total)}</td></tr>`);
+        } else if (item.type === 'tasit') {
+            totalTransportCost += item.expenseAmount;
+            reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td></td><td></td><td></td><td></td><td></td><td>${item.expenseType}</td><td>${f(item.expenseAmount)}</td><td></td><td></td><td>${f(item.expenseAmount)}</td></tr>`);
+        }
+    });
+
+    const grandTotal = totalDailyAmount + totalAccommodationCost + totalTransportCost;
+    let travelRowsHtml = reportRows.join("");
+    const maxRows = 15;
+    for (let i = reportRows.length; i < maxRows; i++) {
+        travelRowsHtml += `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+    }
+
+    // HTML Çıktısı
+    return `
+    <table class="main-content-table">
+    <thead>
+        <tr class="header-info-row">
+            <td colspan="1" class="label-cell">Adı Soyadı</td>
+            <td colspan="1" class="value-cell left-align">${document.getElementById("fullName").value}</td>
+            <td colspan="6" rowspan="4" class="title-cell">YURTİÇİ / GEÇİCİ GÖREV YOLLUĞU BİLDİRİMİ</td>
+            <td colspan="4" class="value-cell" style="border-bottom: 1px solid transparent !important;"> </td> 
+        </tr>
+        <tr class="header-info-row">
+            <td colspan="1" class="label-cell">Unvanı</td>
+            <td colspan="1" class="value-cell left-align">${document.getElementById("title").value}</td>
+            <td colspan="4" class="value-cell" style="border-top: 1px solid transparent !important;"> </td>
+        </tr>
+        <tr class="header-info-row">
+            <td colspan="1" class="label-cell">Aylık Kadro Derecesi ve<br>Ek Göstergesi</td>
+            <td colspan="1" class="value-cell left-align">${document.getElementById("degree").value}</td>
+            <td colspan="1" class="label-cell">Dairesi</td>
+            <td colspan="3" class="value-cell left-align">${document.getElementById("department").value}</td>
+        </tr>
+        <tr class="header-info-row">
+            <td colspan="1" class="label-cell">Gündeliği</td>
+            <td colspan="1" class="value-cell left-align">${dailyRate.toFixed(2).replace(",", ".")} TL</td>
+            <td colspan="1" class="label-cell">Bütçe Yılı</td>
+            <td colspan="3" class="value-cell">
+                <div class="year-box-container" style="justify-content: center; padding: 0;">
+                    <span class="year-box">${y1}</span>
+                    <span class="year-box">${y2}</span>
+                    <span class="year-box">${y3}</span>
+                    <span class="year-box">${y4}</span>
+                </div>
+            </td>
+        </tr>
+        <tr class="main-header">
+            <th rowspan="2" style="width: 8%;">Yolculuk ve Oturma Tarihleri</th>
+            <th rowspan="2" style="width: 25%;">Nereden Nereye Yolculuk Edildiği veya Nerede Oturduğu</th>
+            <th colspan="2" style="width: 7%;">Hareket Saatleri</th>
+            <th rowspan="2" style="width: 3%; line-height: 1;">Gün<br>Sayısı</th>
+            <th colspan="2" style="width: 11%;">GÜNDELİKLER</th>
+            <th colspan="2" style="width: 31.5%;">TAŞIT VE ZORUNLU GİDERLER</th>
+            <th rowspan="2" style="width: 3%;">Dövizin Cinsi</th>
+            <th rowspan="2" style="width: 3%;">Kuru</th>
+            <th rowspan="2" style="width: 8.5%;">Toplam Tutar</th>
+        </tr>
+        <tr class="main-header">
+            <th style="width: 3.5%;">Gidiş</th>
+            <th style="width: 3.5%;">Dönüş</th>
+            <th style="width: 5.5%;">Bir Günlüğü</th>
+            <th style="width: 5.5%;">Tutarı</th>
+            <th style="width: 27.5%;">Çeşidi ve Mevkii</th>
+            <th style="width: 4%;">Tutarı</th>
+        </tr>
+    </thead>
+    <tbody>${travelRowsHtml}</tbody>
+    <tfoot>
+        <tr class="total-row">
+            <td colspan="6" style="text-align:right; padding-right:10px;">TOPLAM</td>
+            <td>${totalDailyAmount.toFixed(2).replace(".", ",")}</td>
+            <td></td>
+            <td>${(totalAccommodationCost + totalTransportCost).toFixed(2).replace(".", ",")}</td>
+            <td colspan="2"></td>
+            <td>${grandTotal.toFixed(2).replace(".", ",")}</td>
+        </tr>
+    </tfoot>
+    </table>
+    
+    <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${grandTotal > 0 ? numberToWordsTR(grandTotal) : 'SIFIR'} harcamaya ait bildirimdir.</p>
+    
+    <table class="footer-table signature-section" style="margin-top:10px;">
+        <tr>
+            <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
+                <p>... / ... / ${document.getElementById("budgetYear").value}</p>
+                <p>Birim Yetkilisi (*)</p>
+                <p>(İmza)</p><br><br>
+                <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("amirAdi").value}</span></p>
+                <p>Unvanı : <span contenteditable="true">${document.getElementById("amirUnvani").value}</span></p>
+            </td>
+            <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
+                <p>... / ... / ${document.getElementById("budgetYear").value}</p>
+                <p>Bildirim Sahibi</p>
+                <p>(İmza)</p><br><br>
+                <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("fullName").value}</span></p>
+                <p>Unvanı : <span contenteditable="true">${document.getElementById("title").value}</span></p>
+            </td>
+        </tr>
+    </table>`;
+}
 
         function generateAraziIfaHTML() {
             const period = document.getElementById("araziDonem").value; const year = parseInt(document.getElementById("budgetYear").value); const görevYeri = document.getElementById("görevYeri").value || "Sinop"; const amirAdi = document.getElementById("araziAmirAdi").value || document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("araziAmirUnvani").value || document.getElementById("amirUnvani").value; const periodMap = { 1: [0, 2], 2: [3, 5], 3: [6, 8], 4: [9, 11] }; const [startMonth, endMonth] = periodMap[period];
@@ -6869,150 +6857,158 @@ const styles = `
         function updateTravelCounter() { const count = document.querySelectorAll(".travel-card").length; document.getElementById("travel-counter").textContent = count; }
 
         function addTravelEntry(entry = {}, isInitialLoad = false) {
-            if (!isInitialLoad) playSound('click');
-            const listContainer = document.getElementById("travel-list"); const cardId = `travel-${travelIdCounter++}`;
-            const card = document.createElement("div"); card.className = "travel-card"; card.id = cardId;
-            if (!isInitialLoad) { card.classList.add('newly-added'); setTimeout(() => card.classList.remove('newly-added'), 600); }
-            const today = new Date().toISOString().split('T')[0];
-            const defaults = { type: "gunubirlik", gorevTipi: "normal", date: today, route: "", start: "08:00", end: "17:00", konu: "Av ve Yaban Hayatı ile İlgili Saha İşleri", accommodation: "", startDate: today, endDate: today, startTime: "08:00", endTime: "17:00", totalAccommodation: "", gidisSuresi: 1, donusSuresi: 1, transport: [], isCollapsed: isInitialLoad };
-            const data = { ...defaults, ...entry };
-            if (isInitialLoad) data.isCollapsed = true;
-            card.innerHTML = `
-            <div class="travel-card-summary" onclick="toggleCardCollapse(this)"></div>
-            <div class="travel-card-content">
-                <div class="travel-progress-bar"><div class="travel-progress-fill"></div></div>
-                <div class="travel-form-grid">
-                    <!-- Adım 1: Görev Türü -->
-                    <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent);">
-                        <div class="input-group">
-                            <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="layers"></i> Görev Türü Seçimi</label>
-                            <select id="${cardId}-type" class="gorev-tipi-select" onchange="updateRowType(this)" style="font-size: 15px; font-weight: 600;"><option value="gunubirlik" ${data.type === 'gunubirlik' ? 'selected' : ''}>📅 Günübirlik Görev</option><option value="coklu" ${data.type === 'coklu' ? 'selected' : ''}>🏨 Çoklu Gün / Konaklama</option></select>
-                            <small><i data-lucide="info"></i>Görev türünü seçtikten sonra diğer alanlar açılacak</small>
-                        </div>
-                        
-                        <div class="step-content" id="${cardId}-step2" style="display:none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);">
-                            <div class="input-group">
-                                <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="briefcase"></i> Görev Kategorisi</label>
-                                <div class="gorev-tipi-options">
-                                    <label class="gorev-tipi-option ${data.gorevTipi === 'normal' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="normal" ${data.gorevTipi === 'normal' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 🎯 Normal Görev</label>
-                                    <label class="gorev-tipi-option ${data.gorevTipi === 'seminer' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="seminer" ${data.gorevTipi === 'seminer' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 📚 Seminer/Eğitim</label>
-                                </div>
-                                <small><i data-lucide="info"></i>Görev kategorisini seçin</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Adım 2: Tarih & Saat -->
-                    <div class="travel-form-step" id="${cardId}-step3" style="background: linear-gradient(135deg, transparent, var(--accent-color-translucent)); display:none;">
-                        <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="calendar-clock"></i> Tarih & Saat Bilgileri</label>
-                             <div class="gunubirlik-fields" ${data.type === 'coklu' ? 'style="display:none;"' : ''}>
-                                <input type="date" class="travel-date" value="${data.date}" style="margin-bottom: 0.75rem;" title="Görev tarihi">
-                                <div class="date-time-fields-grid">
-                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Gidiş Saati</label>
-                                        <input type="time" class="travel-start" value="${data.start}" title="Görev başlangıç saati">
-                                    </div>
-                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Dönüş Saati</label>
-                                        <input type="time" class="travel-end" value="${data.end}" title="Görev bitiş saati">
-                                    </div>
-                                </div>
-                                <small><i data-lucide="info"></i>Görev tarihini ve saatlerini girin</small>
-                            </div>
-                            <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
-                               <div class="date-time-fields-grid" style="margin-bottom: 0.75rem;">
-                                    <input type="date" class="coklu-start-date" value="${data.startDate}" title="Görev başlangıç tarihi">
-                                    <input type="date" class="coklu-end-date" value="${data.endDate}" title="Görev bitiş tarihi">
-                                </div>
-                                <div class="date-time-fields-grid">
-                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i> Gidiş Süresi (Gün)</label>
-                                        <input type="number" class="coklu-gidis-suresi" value="${data.gidisSuresi}" min="1" title="Gidiş yolculuğu kaç gün sürdü?">
-                                    </div>
-                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Dönüş Süresi (Gün)</label>
-                                        <input type="number" class="coklu-donus-suresi" value="${data.donusSuresi}" min="1" title="Dönüş yolculuğu kaç gün sürdü?">
-                                    </div>
-                                </div>
-                                <small><i data-lucide="info"></i>Başlangıç-bitiş tarihleri ve yol süresini girin</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Adım 3: Görev Detayları -->
-                    <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent); grid-column: span 2;">
-                        <div class="travel-form-row-2col">
-                            <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="map-pin"></i> Güzergah</label><div style="position:relative; z-index: 10003;"><input type="text" class="travel-route" placeholder="örn: Kastamonu, Ankara" value="${data.route}"><div class="autocomplete-items" style="display:none;"></div></div></div>
-                            <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="file-text"></i> Görev Konusu</label><div style="position:relative; z-index: 10003;"><input type="text" class="travel-konu" placeholder="örn: Av ve Yaban Hayatı Saha İşleri" value="${data.konu}"><div class="autocomplete-items" style="display:none;"></div></div></div>
-                        </div>
-                        <small style="margin-top: 0.5rem;"><i data-lucide="info"></i>Gideceğiniz yeri ve görev konusunu yazın</small>
-                        
-                        <!-- Konaklama Ücreti (Sadece Çoklu için) -->
-                        <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
-                            <div class="input-group" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="home"></i> Toplam Konaklama Ücreti (TL)</label><input type="number" class="coklu-accommodation" placeholder="0.00" value="${data.totalAccommodation}" title="Konaklama faturası toplam tutarı"><small><i data-lucide="info"></i>Konaklama faturası tutarını girin</small></div>
+    if (!isInitialLoad) playSound('click');
+    const listContainer = document.getElementById("travel-list"); const cardId = `travel-${travelIdCounter++}`;
+    const card = document.createElement("div"); card.className = "travel-card"; card.id = cardId;
+    if (!isInitialLoad) { card.classList.add('newly-added'); setTimeout(() => card.classList.remove('newly-added'), 600); }
+    const today = new Date().toISOString().split('T')[0];
+    const defaults = { type: "gunubirlik", gorevTipi: "normal", date: today, route: "", start: "08:00", end: "17:00", konu: "Av ve Yaban Hayatı ile İlgili Saha İşleri", accommodation: "", startDate: today, endDate: today, startTime: "08:00", endTime: "17:00", totalAccommodation: "", gidisSuresi: 1, donusSuresi: 1, transport: [], isCollapsed: isInitialLoad };
+    const data = { ...defaults, ...entry };
+    if (isInitialLoad) data.isCollapsed = true;
+    
+    card.innerHTML = `
+    <div class="travel-card-summary" onclick="toggleCardCollapse(this)"></div>
+    <div class="travel-card-content">
+        <div class="travel-progress-bar"><div class="travel-progress-fill"></div></div>
+        <div class="travel-form-grid">
+            <!-- Adım 1: Görev Türü -->
+            <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent);">
+                <div class="input-group">
+                    <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="layers"></i> Görev Türü Seçimi</label>
+                    <select id="${cardId}-type" class="gorev-tipi-select" onchange="updateRowType(this)" style="font-size: 15px; font-weight: 600;"><option value="gunubirlik" ${data.type === 'gunubirlik' ? 'selected' : ''}>📅 Günübirlik Görev</option><option value="coklu" ${data.type === 'coklu' ? 'selected' : ''}>🏨 Çoklu Gün / Konaklama</option></select>
+                    <small><i data-lucide="info"></i>Görev türünü seçtikten sonra diğer alanlar açılacak</small>
+                </div>
+                
+                <div class="step-content" id="${cardId}-step2" style="display:none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);">
+                    <div class="input-group">
+                        <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="briefcase"></i> Görev Kategorisi</label>
+                        <div class="gorev-tipi-options">
+                            <label class="gorev-tipi-option ${data.gorevTipi === 'normal' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="normal" ${data.gorevTipi === 'normal' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 🎯 Normal Görev</label>
+                            <label class="gorev-tipi-option ${data.gorevTipi === 'seminer' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="seminer" ${data.gorevTipi === 'seminer' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 📚 Seminer/Eğitim</label>
                         </div>
                     </div>
                 </div>
-
-                <!-- Adım 3: Taşıt Giderleri -->
-                <div class="transport-details travel-form-step" data-step="3. Adım" style="border-color: var(--primary-color);">
-                    <h5 class="transport-details-header" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="car"></i> Taşıt Giderleri</h5>
-                    <div class="transport-list"></div>
-                    <button class="add-transport-btn" onclick="addTransportRow(this)"><i data-lucide="plus"></i> Taşıt Gideri Ekle</button>
-                </div>
-
-                <div class="travel-card-actions">
-                    <div style="display: flex; gap: 0.75rem; margin-left: auto;">
-                        <button class="remove-btn" onclick="removeTravelEntry(event, '${cardId}')"><i data-lucide="trash-2"></i> Sil</button>
-                        <button class="save-and-close-btn" onclick="requestCloseTravelCard(this, true)"><i data-lucide="check-circle"></i> Kaydet ve Kapat</button>
+            </div>
+            
+            <!-- Adım 2: Tarih & Saat -->
+            <div class="travel-form-step" id="${cardId}-step3" style="background: linear-gradient(135deg, transparent, var(--accent-color-translucent)); display:none;">
+                <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="calendar-clock"></i> Tarih & Saat Bilgileri</label>
+                     <div class="gunubirlik-fields" ${data.type === 'coklu' ? 'style="display:none;"' : ''}>
+                        <input type="date" class="travel-date" value="${data.date}" style="margin-bottom: 0.75rem;" title="Görev tarihi">
+                        <div class="date-time-fields-grid">
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Gidiş Saati</label>
+                                <input type="time" class="travel-start" value="${data.start}" title="Görev başlangıç saati">
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Dönüş Saati</label>
+                                <input type="time" class="travel-end" value="${data.end}" title="Görev bitiş saati">
+                            </div>
+                        </div>
+                        <small><i data-lucide="info"></i>Görev tarihini ve saatlerini girin</small>
+                    </div>
+                    <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
+                       <div class="date-time-fields-grid" style="margin-bottom: 0.75rem;">
+                            <input type="date" class="coklu-start-date" value="${data.startDate}" title="Görev başlangıç tarihi">
+                            <input type="date" class="coklu-end-date" value="${data.endDate}" title="Görev bitiş tarihi">
+                        </div>
+                        <div class="date-time-fields-grid">
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i> Gidiş Süresi (Gün)</label>
+                                <input type="number" class="coklu-gidis-suresi" value="${data.gidisSuresi}" min="1" title="Gidiş yolculuğu kaç gün sürdü?">
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Dönüş Süresi (Gün)</label>
+                                <input type="number" class="coklu-donus-suresi" value="${data.donusSuresi}" min="1" title="Dönüş yolculuğu kaç gün sürdü?">
+                            </div>
+                        </div>
+                        <small><i data-lucide="info"></i>Başlangıç-bitiş tarihleri ve yol süresini girin</small>
                     </div>
                 </div>
-            </div>`;
-            listContainer.appendChild(card);
+            </div>
+            
+            <!-- Adım 3: Görev Detayları -->
+            <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent); grid-column: span 2;">
+                <div class="travel-form-row-2col">
+                    <div class="input-group">
+                        <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="map-pin"></i> Güzergah</label>
+                        <div style="position:relative; z-index: 10003;">
+                            <input type="text" class="travel-route" placeholder="Örn: Karabük - Bartın - Zonguldak" value="${data.route}">
+                            <div class="autocomplete-items" style="display:none;"></div>
+                        </div>
+                        <!-- GÜZERGAH UYARI METNİ -->
+                        <small style="color: var(--primary-color); margin-top:5px; font-size: 0.75rem; font-weight:600; text-align:center; display: block !important; opacity:0.9;">
+                            <i data-lucide="info" style="width:12px; height:12px; vertical-align:middle; margin-right:2px;"></i> 
+                            Zincirleme seyahat için şehirlerin arasına <b>tire (-)</b> veya <b>virgül (,)</b> koyunuz.
+                        </small>
+                    </div>
+                    <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="file-text"></i> Görev Konusu</label><div style="position:relative; z-index: 10003;"><input type="text" class="travel-konu" placeholder="örn: Av ve Yaban Hayatı Saha İşleri" value="${data.konu}"><div class="autocomplete-items" style="display:none;"></div></div></div>
+                </div>
+                
+                <!-- Konaklama Ücreti (Sadece Çoklu için) -->
+                <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
+                    <div class="input-group" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="home"></i> Toplam Konaklama Ücreti (TL)</label><input type="number" class="coklu-accommodation" placeholder="0.00" value="${data.totalAccommodation}" title="Konaklama faturası toplam tutarı"><small style="display: block !important;"><i data-lucide="info"></i>Konaklama faturası tutarını girin</small></div>
+                </div>
+            </div>
 
-            const overlapCheckHandler = (e) => handleDateOrTimeChange(e.target);
-            const storePreviousValueHandler = (e) => { e.target.dataset.previousValue = e.target.value; };
+        <!-- Adım 3: Taşıt Giderleri -->
+        <div class="transport-details travel-form-step" data-step="3. Adım" style="border-color: var(--primary-color);">
+            <h5 class="transport-details-header" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="car"></i> Taşıt Giderleri</h5>
+            <div class="transport-list"></div>
+            <button class="add-transport-btn" onclick="addTransportRow(this)"><i data-lucide="plus"></i> Taşıt Gideri Ekle</button>
+        </div>
 
-            card.querySelectorAll('input, select, textarea').forEach(input => {
-                input.addEventListener('change', () => {
-                    saveData();
-                    updateTravelProgress(card);
-                });
-                input.addEventListener('input', () => {
-                    if (input.classList.contains('error-highlight')) {
-                        input.classList.remove('error-highlight');
-                    }
-                    updateTravelProgress(card);
-                });
-            });
+        <div class="travel-card-actions">
+            <div style="display: flex; gap: 0.75rem; margin-left: auto;">
+                <button class="remove-btn" onclick="removeTravelEntry(event, '${cardId}')"><i data-lucide="trash-2"></i> Sil</button>
+                <button class="save-and-close-btn" onclick="requestCloseTravelCard(this, true)"><i data-lucide="check-circle"></i> Kaydet ve Kapat</button>
+            </div>
+        </div>
+    </div>`;
+    listContainer.appendChild(card);
 
-            const dateOrTimeInputs = card.querySelectorAll('.travel-date, .travel-start, .travel-end, .coklu-start-date, .coklu-end-date');
-            dateOrTimeInputs.forEach(input => {
-                input.addEventListener('focus', storePreviousValueHandler);
-                input.addEventListener('change', overlapCheckHandler);
-            });
+    const overlapCheckHandler = (e) => handleDateOrTimeChange(e.target);
+    const storePreviousValueHandler = (e) => { e.target.dataset.previousValue = e.target.value; };
 
-            if (data.transport && data.transport.length > 0) { const transportContainer = card.querySelector('.transport-list'); data.transport.forEach(transportItem => addTransportRow(transportContainer.nextElementSibling, transportItem)); }
-            updateTravelCounter(); updateNightCounter(card.querySelector(".coklu-start-date")); updateGorevTipi(card.querySelector(`input[name="${cardId}-gorevTipi"]:checked`));
-            attachAutocomplete(card.querySelector(".travel-route"), dynamicLocations);
-            attachAutocomplete(card.querySelector(".travel-konu"), dynamicTopics);
-            updateSummaryView(card);
-            if (data.isCollapsed) {
-                card.classList.add('is-collapsed');
-            } else {
-                // Yeni kart ise adımları göster
-                const step2 = document.getElementById(cardId + '-step2');
-                const step3 = document.getElementById(cardId + '-step3');
-                if (step2) step2.style.display = 'block';
-                if (step3) step3.style.display = 'block';
+    card.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('change', () => {
+            saveData();
+            updateTravelProgress(card);
+        });
+        input.addEventListener('input', () => {
+            if (input.classList.contains('error-highlight')) {
+                input.classList.remove('error-highlight');
             }
-            card.dataset.savedState = getCardState(card);
-            lucide.createIcons();
+            updateTravelProgress(card);
+        });
+    });
 
-            if (!isInitialLoad) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
+    const dateOrTimeInputs = card.querySelectorAll('.travel-date, .travel-start, .travel-end, .coklu-start-date, .coklu-end-date');
+    dateOrTimeInputs.forEach(input => {
+        input.addEventListener('focus', storePreviousValueHandler);
+        input.addEventListener('change', overlapCheckHandler);
+    });
+
+    if (data.transport && data.transport.length > 0) { const transportContainer = card.querySelector('.transport-list'); data.transport.forEach(transportItem => addTransportRow(transportContainer.nextElementSibling, transportItem)); }
+    updateTravelCounter(); updateNightCounter(card.querySelector(".coklu-start-date")); updateGorevTipi(card.querySelector(`input[name="${cardId}-gorevTipi"]:checked`));
+    attachAutocomplete(card.querySelector(".travel-route"), dynamicLocations);
+    attachAutocomplete(card.querySelector(".travel-konu"), dynamicTopics);
+    updateSummaryView(card);
+    if (data.isCollapsed) {
+        card.classList.add('is-collapsed');
+    } else {
+        const step2 = document.getElementById(cardId + '-step2');
+        const step3 = document.getElementById(cardId + '-step3');
+        if (step2) step2.style.display = 'block';
+        if (step3) step3.style.display = 'block';
+    }
+    card.dataset.savedState = getCardState(card);
+    lucide.createIcons();
+
+    if (!isInitialLoad) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
         function handleTransportChange(selectElement) {
             const transportEntry = selectElement.closest('.transport-entry'); if (!transportEntry) return;
             const descriptionInput = transportEntry.querySelector('.transport-description'); if (!descriptionInput) return;
@@ -9697,8 +9693,12 @@ function finishWizard() {
                                 <i data-lucide="map-pin" style="width: 22px; height: 22px;"></i> 
                                 Güzergah
                             </label>
+                            <!-- GÜZERGAH UYARI METNİ (Sihirbaz) -->
+                            <div style="text-align:center; margin-bottom:10px; color: var(--text-secondary); font-size: 0.95rem; font-weight:500;">
+                                Zincirleme seyahat için şehirlerin arasına <b style="color:var(--primary-color);">tire (-)</b> veya <b style="color:var(--primary-color);">virgül (,)</b> koyunuz.
+                            </div>
                             <div style="position: relative;">
-                                <input type="text" id="wizardRoute" placeholder="örn: Kastamonu, Ankara" onchange="document.getElementById('wizardNextBtn').disabled = false;" style="text-align: center; font-size: 1.3rem; padding: 1.2rem 1.5rem; border-radius: 12px; width: 100%;">
+                                <input type="text" id="wizardRoute" placeholder="örn: Kastamonu - Ankara - Sinop" onchange="document.getElementById('wizardNextBtn').disabled = false;" style="text-align: center; font-size: 1.3rem; padding: 1.2rem 1.5rem; border-radius: 12px; width: 100%;">
                                 <div class="autocomplete-items" style="display:none;"></div>
                             </div>
                         </div>
@@ -9974,6 +9974,91 @@ function finishWizard() {
             });
         }
     });
+</script>
+
+<!-- ========================================== -->
+<!-- === FİNAL PERFORMANS YAMASI (FIX) === -->
+<!-- ========================================== -->
+<script>
+(function() {
+    /* 1. ANIMASYONLARI DURDUR (İşlemciyi yoran süslemeler) */
+    // Bu fonksiyonları boşaltarak işlemci yükünü azaltıyoruz
+    window.createMiniCelebration = function() {}; 
+    window.createInputCelebration = function() {}; 
+    window.createSuccessBurst = function() {};
+    // Konfeti efektini çok hafifletiyoruz
+    window.createConfetti = function() { console.log("Efekt atlandı"); };
+
+    /* 2. İKON TARAMASINI SINIRLA (ANA KASMA SEBEBİ BURASI) */
+    // Program normalde her tıklamada tüm sayfayı tarıyor. 
+    // Biz bunu sadece "açık olan pencereyi" tarayacak şekilde değiştiriyoruz.
+    const originalLucide = lucide.createIcons;
+    lucide.createIcons = function(options) {
+        const wizardOverlay = document.getElementById('travelWizardOverlay');
+        
+        // Eğer Sihirbaz (Yeni Ekleme Ekranı) açıksa:
+        if (wizardOverlay && wizardOverlay.style.display !== 'none') {
+            // SADECE sihirbazın içindeki ikonları güncelle, arka planı elleme!
+            originalLucide({
+                root: wizardOverlay,
+                attrs: {class: "lucide"},
+                nameAttr: "data-lucide"
+            });
+        } else {
+            // Sihirbaz kapalıysa normal çalışabilir
+            originalLucide(options);
+        }
+    };
+
+    /* 3. INPUT GECİKMELERİNİ ÖNLEYEN CSS AYARLARI */
+    const fastStyle = document.createElement('style');
+    fastStyle.textContent = `
+        /* Buzlu cam efektini tamamen kapat (GPU darboğazını çözer) */
+        .travel-wizard-overlay, .travel-wizard-modal, .wizard-step {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            background: rgba(255, 255, 255, 0.98) !important; /* Düz beyaz yap */
+        }
+        
+        /* Yazı yazarken oluşan gecikmeyi (input lag) önle */
+        .wizard-input-group input, 
+        .wizard-input-group select,
+        .wizard-input-group textarea {
+            transition: none !important; /* Animasyonu kapat */
+            transform: none !important;  /* Büyüme efektini kapat */
+            box-shadow: 0 0 0 1px #cbd5e1 !important; /* Basit çerçeve */
+            background: #fff !important;
+        }
+        
+        /* Tıklayınca zıplamasını engelle */
+        .wizard-input-group input:focus, 
+        .wizard-input-group select:focus {
+            transform: none !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 2px var(--primary-color) !important;
+        }
+
+        /* Kart seçimlerindeki ağırlığı kaldır */
+        .wizard-option-card {
+            transition: none !important;
+            transform: none !important;
+            animation: none !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        }
+        .wizard-option-card:hover {
+            background-color: #f1f5f9 !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        /* Arka plan ikonlarının dönmesini durdur */
+        .wizard-option-icon {
+            animation: none !important;
+        }
+    `;
+    document.head.appendChild(fastStyle);
+    
+    console.log("🚀 Hızlandırma yaması başarıyla uygulandı.");
+})();
 </script>
 
 </body>
