@@ -6977,7 +6977,10 @@ const styles = `
                     <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent);">
                         <div class="input-group">
                             <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="layers"></i> Görev Türü Seçimi</label>
-                            <select id="${cardId}-type" class="gorev-tipi-select" onchange="updateRowType(this)" style="font-size: 15px; font-weight: 600;"><option value="gunubirlik" ${data.type === 'gunubirlik' ? 'selected' : ''}>📅 Günübirlik Görev</option><option value="coklu" ${data.type === 'coklu' ? 'selected' : ''}>🏨 Çoklu Gün / Konaklama</option></select>
+                            <select id="${cardId}-type" class="gorev-tipi-select" onchange="updateRowType(this)" style="font-size: 15px; font-weight: 600;">
+    <option value="gunubirlik" ${data.type === 'gunubirlik' ? 'selected' : ''}>📅 Günübirlik</option>
+    <option value="coklu" ${data.type === 'coklu' ? 'selected' : ''}>🏨 Konaklamalı</option>
+</select>
                             <small><i data-lucide="info"></i>Görev türünü seçtikten sonra diğer alanlar açılacak</small>
                         </div>
                         
@@ -9665,10 +9668,10 @@ function finishWizard() {
                             <p class="wizard-option-desc">Tek günlük görev</p>
                         </div>
                         <div class="wizard-option-card" onclick="selectWizardOption(this, 'gorevTuru', 'coklu')">
-                            <div class="wizard-option-icon">🏨</div>
-                            <h4 class="wizard-option-title">Çoklu Gün</h4>
-                            <p class="wizard-option-desc">Konaklama gerektiren görev</p>
-                        </div>
+    <div class="wizard-option-icon">🏨</div>
+    <h4 class="wizard-option-title">Konaklamalı</h4>
+    <p class="wizard-option-desc">Konaklama gerektiren görev</p>
+</div>
                     </div>
                 </div>
                 
@@ -10191,6 +10194,365 @@ function finishWizard() {
     </div>
 
     <!-- Verified Build | Necmettin ERGİN | Safe Enhancement Update v13.0 + Sound Effects -->
+
+<!-- ======================================================= -->
+<!-- === MOBİL UYGULAMA DÖNÜŞÜM MODU (RESPONSIVE PATCH) === -->
+<!-- ======================================================= -->
+<style>
+    /* Sadece Mobil ve Tablet Cihazlarda Devreye Girer */
+    @media (max-width: 768px) {
+
+        /* --- 1. GENEL YAPILANDIRMA --- */
+        body {
+            /* Mobilde sağa sola kaymayı engelle */
+            overflow-x: hidden;
+            /* Dokunma gecikmesini önle */
+            touch-action: manipulation; 
+            padding-bottom: 80px; /* Alt kısımdaki butonlar için boşluk */
+        }
+
+        .container {
+            padding: 10px !important;
+            margin-top: 10px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* --- 2. ÜST MENÜ (NAVBAR) --- */
+        .top-nav {
+            position: relative !important;
+            flex-direction: column !important;
+            padding: 10px !important;
+            gap: 10px !important;
+            top: 0 !important;
+            margin: 0 0 20px 0 !important;
+        }
+
+        .nav-left, .nav-right {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        /* Logo alanlarını mobilde biraz küçültelim */
+        .logo-placeholder {
+            width: 36px !important;
+            height: 36px !important;
+        }
+
+        /* Başlık Mobilde Çok Büyük, Küçültüyoruz */
+        .decorative-title {
+            margin: 1rem 0 2rem 0 !important;
+        }
+
+        .decorative-title .main-line {
+            font-size: 1.8rem !important; /* Dev puntoları küçülttük */
+            line-height: 1.1 !important;
+        }
+
+        .decorative-title .sub-line {
+            font-size: 0.75rem !important;
+            letter-spacing: 0.2em !important;
+            margin-top: 0.5rem !important;
+        }
+
+        /* --- 3. SEKME (TAB) BUTONLARI --- */
+        .tab-nav {
+            flex-direction: column !important; /* Alt alta olsun */
+            gap: 8px !important;
+            background: transparent !important;
+            padding: 0 !important;
+        }
+
+        .tab-btn {
+            width: 100% !important;
+            justify-content: flex-start !important;
+            padding: 15px !important;
+            background: #fff !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        }
+
+        .tab-btn.active {
+            transform: scale(1.02) !important;
+            z-index: 2;
+        }
+
+        /* --- 4. SEYAHAT LİSTESİ KARTLARI --- */
+        #travel-list {
+            padding-left: 0 !important; /* Yamukluktan kalan boşluğu sil */
+        }
+
+        .travel-card {
+            transform: none !important; /* Yamukluğu iptal et */
+            margin-right: 0 !important;
+            margin-bottom: 15px !important;
+            border-radius: 12px !important;
+        }
+
+        .travel-card:hover {
+            transform: none !important; /* Hover efektini iptal et */
+        }
+
+        /* Kart Başlığı (Özet) */
+        .travel-card-summary {
+            transform: none !important;
+            flex-direction: column !important; /* Bilgiler alt alta */
+            align-items: flex-start !important;
+            gap: 12px !important;
+            padding: 15px !important;
+        }
+
+        .summary-info {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+            gap: 8px !important;
+        }
+        
+        /* Özet içindeki elemanlar tam genişlik */
+        .summary-item, .summary-item.summary-date-type, .summary-item.summary-route, .summary-item.summary-subject {
+            width: 100% !important;
+            white-space: normal !important; /* Metin alt satıra geçsin */
+        }
+
+        /* Butonlar (Sil/Kopyala) */
+        .summary-actions {
+            transform: none !important;
+            width: 100% !important;
+            justify-content: flex-end !important;
+            margin-top: 10px !important;
+            border-top: 1px dashed #eee;
+            padding-top: 10px;
+        }
+        
+        /* Kopyala butonu mobilde her zaman görünsün (hover yok çünkü) */
+        .copy-task-btn {
+            opacity: 1 !important;
+            transform: none !important;
+            pointer-events: auto !important;
+            padding: 8px 15px !important;
+        }
+
+        /* --- 5. SİHİRBAZ (WIZARD) - EN KRİTİK KISIM --- */
+        .travel-wizard-modal {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            transform: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        .wizard-header {
+            padding: 15px !important;
+        }
+        
+        .wizard-title {
+            font-size: 1.5rem !important;
+        }
+        
+        .wizard-body {
+            padding: 10px !important;
+            overflow-y: auto !important; /* İçerik kaydırılabilir olsun */
+            align-items: flex-start !important; /* Üstten başlasın */
+        }
+        
+        .wizard-step {
+            padding: 0 !important;
+            justify-content: flex-start !important;
+        }
+        
+        .wizard-step-title {
+            font-size: 1.8rem !important;
+            margin-top: 20px !important;
+            text-align: center;
+        }
+
+        .wizard-step-description {
+            font-size: 1rem !important;
+            margin-bottom: 2rem !important;
+        }
+
+        /* Seçenek Kartları (Yan yana yerine alt alta) */
+        .wizard-option-grid {
+            flex-direction: column !important;
+            gap: 15px !important;
+            width: 100% !important;
+        }
+
+        .wizard-option-card {
+            min-width: unset !important;
+            width: 100% !important;
+            min-height: unset !important;
+            padding: 20px !important;
+            flex-direction: row !important; /* İkon ve yazı yan yana olsun */
+            justify-content: flex-start !important;
+            align-items: center !important;
+            gap: 20px !important;
+            text-align: left !important;
+        }
+        
+        .wizard-option-icon {
+            font-size: 3rem !important; /* İkonu küçült */
+            margin-bottom: 0 !important;
+        }
+        
+        .wizard-option-title {
+            font-size: 1.4rem !important;
+            margin: 0 !important;
+        }
+        
+        .wizard-option-desc {
+            font-size: 0.9rem !important;
+            display: none !important; /* Mobilde açıklamayı gizle, yer aç */
+        }
+
+        /* Inputlar */
+        .wizard-input-row, .wizard-date-grid, .wizard-duration-grid {
+            grid-template-columns: 1fr !important; /* Tek sütun */
+            gap: 15px !important;
+            padding: 0 !important;
+        }
+        
+        .wizard-input-group label {
+            font-size: 1.2rem !important;
+        }
+
+        /* Devasa inputları mobilde normal boyuta çek */
+        .wizard-input-group input[type="date"], 
+        .wizard-input-group input[type="time"], 
+        .wizard-input-group input[type="number"],
+        .wizard-input-group input[type="text"] {
+            font-size: 1.2rem !important;
+            padding: 1rem !important;
+            min-height: 60px !important;
+            width: 100% !important;
+        }
+
+        /* Sihirbaz Alt Footer (Butonlar) */
+        .wizard-footer {
+            padding: 15px !important;
+            flex-direction: column-reverse !important; /* İleri butonu en üstte olsun */
+            gap: 10px !important;
+            background: #fff !important;
+            border-top: 1px solid #eee !important;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        
+        .wizard-btn {
+            width: 100% !important;
+            padding: 15px !important;
+            font-size: 1.1rem !important;
+            justify-content: center !important;
+        }
+        
+        .wizard-body {
+            /* Footer için alttan boşluk bırak */
+            padding-bottom: 120px !important;
+        }
+
+        /* --- 6. PROFİL SEÇİM EKRANI --- */
+        #profile-selection-screen {
+            padding: 15px !important;
+            overflow-y: auto !important; /* Kaydırma aç */
+        }
+        
+        .profile-modal h1.decorative-title {
+            font-size: 1.8rem !important;
+            margin-top: 40px !important;
+        }
+
+        .profile-container {
+            /* Mobilde 2 sütunlu grid */
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+            padding-bottom: 40px;
+        }
+        
+        .profile-card {
+            height: 110px !important;
+        }
+
+        /* --- 7. GENEL INPUT VE BUTONLAR --- */
+        input, select, textarea, button {
+            font-size: 16px !important; /* iOS zoom sorununu engeller */
+        }
+
+        /* Seyahat Ekleme Formu İçi */
+        .travel-form-grid {
+            grid-template-columns: 1fr !important; /* Tek sütun */
+        }
+        
+        .travel-form-row, .travel-form-row-2col {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .date-time-fields-grid {
+            grid-template-columns: 1fr 1fr !important; /* Tarih saat yan yana kalsın, sığar */
+            gap: 10px !important;
+        }
+
+        /* Taşıt Seçim Listesi (Sihirbaz) */
+        .wizard-transport-item {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            background: #f8fafc !important;
+        }
+        
+        .wizard-transport-item input, 
+        .wizard-transport-item select {
+            width: 100% !important;
+            height: 44px !important; /* Parmakla basılabilir yükseklik */
+        }
+
+        /* --- 8. RAPOR OLUŞTURMA BUTONLARI --- */
+        .report-actions-grid {
+            grid-template-columns: 1fr !important; /* Tek sütun */
+        }
+        
+        .report-generate-btn {
+            height: auto !important;
+            padding: 15px !important;
+            white-space: normal !important; /* Uzun yazılar alt satıra geçsin */
+        }
+
+        /* --- 9. YÜZEN BİLGİ KARTI --- */
+        .floating-info-card {
+            bottom: 10px !important;
+            right: 10px !important;
+            left: 10px !important;
+            width: auto !important;
+            z-index: 999 !important;
+        }
+
+        /* --- 10. TARİH SEÇİCİLER (Native Görünüm) --- */
+        input[type="date"], input[type="time"] {
+            -webkit-appearance: none;
+            min-height: 44px;
+        }
+        
+        /* Modal kapatma butonu */
+        .wizard-close-btn {
+            top: 10px !important;
+            right: 10px !important;
+            width: 44px !important;
+            height: 44px !important;
+            font-size: 2rem !important;
+        }
+
+        /* Hızlı Karanlık Mod Butonu */
+        .quick-dark-toggle {
+            bottom: 80px !important; /* Footer'ın üstünde */
+            right: 20px !important;
+        }
+    }
+</style>
+
 </body>
 
 </html>
