@@ -6480,322 +6480,394 @@ const styles = `
         }
 
         function generateYollukReportHTML() {
-    const dailyRate = parseFloat(document.getElementById("dailyRate").value) || 0;
-    const accommodationRate = parseFloat(document.getElementById("accommodationRate").value) || 0;
-    const selectedMonthOptions = Array.from(document.getElementById('yollukMonthFilter').selectedOptions);
-    const selectedMonths = selectedMonthOptions.map(opt => parseInt(opt.value, 10));
+            const dailyRate = parseFloat(document.getElementById("dailyRate").value) || 0;
+            const accommodationRate = parseFloat(document.getElementById("accommodationRate").value) || 0;
+            const selectedMonthOptions = Array.from(document.getElementById('yollukMonthFilter').selectedOptions);
+            const selectedMonths = selectedMonthOptions.map(opt => parseInt(opt.value, 10));
 
-    if (selectedMonths.length === 0) {
-        showToast("Lütfen en az bir rapor ayı seçin.", "warning");
-        return null;
-    }
-
-    const selectAll = selectedMonths.includes(0);
-    const year = document.getElementById("budgetYear").value.toString();
-    const y1 = year[0] || '';
-    const y2 = year[1] || '';
-    const y3 = year[2] || '';
-    const y4 = year[3] || '';
-
-    const görevYeri = document.getElementById("görevYeri").value || "Sinop";
-    let allReportItems = [];
-    let totalDailyAmount = 0;
-    let totalAccommodationCost = 0;
-    let totalTransportCost = 0;
-    const oneDay = 864e5;
-
-    // --- Seyahat Kartlarını Döngüye Al ---
-    document.querySelectorAll(".travel-card").forEach(row => {
-        const type = row.querySelector('.gorev-tipi-select').value;
-        let taskStartDate, taskEndDate;
-
-        if (type === 'gunubirlik') {
-            const dateStr = row.querySelector(".travel-date").value;
-            if (!dateStr || isNaN(new Date(dateStr).getTime())) return;
-            taskStartDate = taskEndDate = new Date(dateStr);
-        } else {
-            const startDateStr = row.querySelector(".coklu-start-date").value;
-            const endDateStr = row.querySelector(".coklu-end-date").value;
-            if (!startDateStr || !endDateStr || isNaN(new Date(startDateStr).getTime()) || isNaN(new Date(endDateStr).getTime())) return;
-            taskStartDate = new Date(startDateStr);
-            taskEndDate = new Date(endDateStr);
-        }
-
-        if (!selectAll) {
-            const month = taskStartDate.getMonth() + 1;
-            if (!selectedMonths.includes(month)) return;
-        }
-
-        // Taşıtları Topla
-        const allTransportsForRow = [];
-        row.querySelectorAll('.transport-entry').forEach((tr, index) => {
-            allTransportsForRow.push({
-                id: `transport-${row.id}-${index}`,
-                date: tr.querySelector('.transport-date').value,
-                type: tr.querySelector('.transport-type').value,
-                description: tr.querySelector('.transport-description').value,
-                cost: parseFloat(tr.querySelector('.transport-cost').value) || 0
-            });
-        });
-
-        const processedTransportIds = new Set();
-
-        // --- GÜNÜBİRLİK HESABI ---
-        if (type === 'gunubirlik') {
-            const allowance = calculateAllowance(row.querySelector(".travel-start").value, row.querySelector(".travel-end").value, false);
-            let rawRoute = row.querySelector(".travel-route").value;
-            
-            // Günübirlik temizlik: Ayırıcıları standartlaştır
-            // Kullanıcı virgül, tire veya slaş kullanmışsa hepsini büyüktür (>) işaretine çevirir
-            let cleanRoute = rawRoute.replace(/[-/,]+/g, ' > '); 
-            
-            // Eğer kullanıcı sadece "Kastamonu" yazdıysa "Sinop > Kastamonu > Sinop" yapar
-            let route = (cleanRoute && !cleanRoute.includes(görevYeri)) ? `${görevYeri} > ${cleanRoute} > ${görevYeri}` : cleanRoute;
-
-            let attachedTransport = null;
-            if (allTransportsForRow.length > 0) {
-                attachedTransport = {
-                    type: allTransportsForRow.map(t => `${t.type} (${t.description})`).join(', '),
-                    amount: allTransportsForRow.reduce((sum, t) => sum + t.cost, 0)
-                };
-                allTransportsForRow.forEach(t => processedTransportIds.add(t.id));
+            if (selectedMonths.length === 0) {
+                showToast("Lütfen en az bir rapor ayı seçin.", "warning");
+                return null;
             }
 
-            if ((allowance && allowance.val > 0) || attachedTransport) {
-                allReportItems.push({
-                    sortDate: taskStartDate,
-                    type: 'gundelik',
-                    date: taskStartDate,
-                    route: route,
-                    start: row.querySelector(".travel-start").value,
-                    end: row.querySelector(".travel-end").value,
-                    dayCount: allowance.str,
-                    dailyRate: dailyRate,
-                    dailyAmount: dailyRate * allowance.val,
-                    attachedTransport: attachedTransport
+            const selectAll = selectedMonths.includes(0);
+            const year = document.getElementById("budgetYear").value.toString();
+            const y1 = year[0] || '';
+            const y2 = year[1] || '';
+            const y3 = year[2] || '';
+            const y4 = year[3] || '';
+
+            const görevYeri = document.getElementById("görevYeri").value || "Sinop";
+            let allReportItems = [];
+            let totalDailyAmount = 0;
+            let totalAccommodationCost = 0;
+            let totalTransportCost = 0;
+            const oneDay = 864e5;
+
+            // --- Seyahat Kartlarını Döngüye Al ---
+            document.querySelectorAll(".travel-card").forEach(row => {
+                const type = row.querySelector('.gorev-tipi-select').value;
+                let taskStartDate, taskEndDate;
+
+                // Tarihleri Al
+                if (type === 'gunubirlik') {
+                    const dateStr = row.querySelector(".travel-date").value;
+                    if (!dateStr || isNaN(new Date(dateStr).getTime())) return;
+                    taskStartDate = taskEndDate = new Date(dateStr);
+                } else {
+                    const startDateStr = row.querySelector(".coklu-start-date").value;
+                    const endDateStr = row.querySelector(".coklu-end-date").value;
+                    if (!startDateStr || !endDateStr || isNaN(new Date(startDateStr).getTime()) || isNaN(new Date(endDateStr).getTime())) return;
+                    taskStartDate = new Date(startDateStr);
+                    taskEndDate = new Date(endDateStr);
+                }
+
+                // Ay Filtresi Kontrolü
+                if (!selectAll) {
+                    // Görev başlangıcı veya bitişi seçilen aylardan birine denk geliyorsa rapora dahil et
+                    const startMonth = taskStartDate.getMonth() + 1;
+                    const endMonth = taskEndDate.getMonth() + 1;
+                    if (!selectedMonths.includes(startMonth) && !selectedMonths.includes(endMonth)) return;
+                }
+
+                // Bu satırdaki tüm taşıtları topla
+                const allTransportsForRow = [];
+                row.querySelectorAll('.transport-entry').forEach((tr, index) => {
+                    allTransportsForRow.push({
+                        id: `transport-${row.id}-${index}`,
+                        date: tr.querySelector('.transport-date').value,
+                        type: tr.querySelector('.transport-type').value,
+                        description: tr.querySelector('.transport-description').value,
+                        cost: parseFloat(tr.querySelector('.transport-cost').value) || 0
+                    });
                 });
-            }
-        } 
-        // --- ÇOKLU GÜN HESABI (ZİNCİRLEME & STANDART) ---
-        else {
-            if (taskEndDate.getTime() < taskStartDate.getTime()) return;
+                const processedTransportIds = new Set(); // Hangi taşıtların rapora eklendiğini takip et
 
-            const destination = row.querySelector(".travel-route").value;
-            
-            // === AKILLI AYIRICI ===
-            // Tire (-), Virgül (,), Taksim (/), Büyüktür (>) işaretlerinin hepsini kabul eder.
-            // Örn: "Karabük, Bartın" veya "Karabük/Bartın" veya "Karabük - Bartın" hepsi çalışır.
-            const stops = destination.split(/[-/>,]+/).map(s => s.trim()).filter(s => s && s.toLowerCase() !== görevYeri.toLowerCase());
-            
-            const totalDays = Math.round((taskEndDate - taskStartDate) / oneDay) + 1;
-            const totalAccommodation = parseFloat(row.querySelector(".coklu-accommodation").value) || 0;
-            const geceSayisi = Math.max(1, totalDays - 1);
-            
-            let currentLoopDate = new Date(taskStartDate);
-            let currentLocation = görevYeri; 
-            let stopIndex = 0; 
+                // =========================================================
+                // SENARYO 1: GÜNÜBİRLİK GÖREVLER
+                // =========================================================
+                if (type === 'gunubirlik') {
+                    const allowance = calculateAllowance(row.querySelector(".travel-start").value, row.querySelector(".travel-end").value, false);
+                    let rawRoute = row.querySelector(".travel-route").value;
+                    let cleanRoute = rawRoute.replace(/[-/,]+/g, ' > ');
+                    let route = (cleanRoute && !cleanRoute.toLowerCase().includes(görevYeri.toLowerCase())) ? 
+                                `${görevYeri} > ${cleanRoute} > ${görevYeri}` : cleanRoute;
 
-            for (let i = 0; i < totalDays; i++) {
-                let routeText = "";
-                
-                // --- SON GÜN (DÖNÜŞ) ---
-                if (i === totalDays - 1) {
-                    // Kalan şehirler varsa hepsini ekle (Zonguldak > Bolu > Sinop gibi)
-                    let remainingStops = "";
-                    if (stopIndex < stops.length) {
-                        remainingStops = " > " + stops.slice(stopIndex).join(" > ");
+                    // Taşıt varsa ekle
+                    let attachedTransport = null;
+                    if (allTransportsForRow.length > 0) {
+                        attachedTransport = {
+                            type: allTransportsForRow.map(t => `${t.type} (${t.description})`).join(', '),
+                            amount: allTransportsForRow.reduce((sum, t) => sum + t.cost, 0)
+                        };
+                        allTransportsForRow.forEach(t => processedTransportIds.add(t.id));
                     }
-                    // "(Dönüş)" ibaresi silindi, sadece temiz rota
-                    routeText = `${currentLocation}${remainingStops} > ${görevYeri}`;
+
+                    if ((allowance && allowance.val > 0) || attachedTransport) {
+                        allReportItems.push({
+                            sortDate: taskStartDate,
+                            type: 'gundelik',
+                            startDate: taskStartDate, // Başlangıç
+                            endDate: taskEndDate,     // Bitiş (Aynı gün)
+                            route: route,
+                            start: row.querySelector(".travel-start").value,
+                            end: row.querySelector(".travel-end").value,
+                            dayCount: allowance.str,
+                            dailyRate: dailyRate,
+                            dailyAmount: dailyRate * allowance.val,
+                            attachedTransport: attachedTransport,
+                            attachedExpense: null
+                        });
+                    }
                 } 
-                // --- ARA GÜNLER ---
+                // =========================================================
+                // SENARYO 2: ÇOKLU GÜN (KONAKLAMALI)
+                // =========================================================
                 else {
-                    if (stopIndex < stops.length) {
-                        const nextStop = stops[stopIndex];
-                        routeText = `${currentLocation} > ${nextStop}`;
-                        currentLocation = nextStop;
-                        stopIndex++;
-                    } else {
-                        // Durak bitti, otelde kalıyor
-                        routeText = `${currentLocation} (Mahallinde)`;
+                    if (taskEndDate.getTime() < taskStartDate.getTime()) return;
+
+                    const destinationRaw = row.querySelector(".travel-route").value;
+                    // Durakları ayır (Tire, Virgül, Büyüktür işareti, Taksim)
+                    const stops = destinationRaw.split(/[-/>,]+/).map(s => s.trim()).filter(s => s && s.toLowerCase() !== görevYeri.toLowerCase());
+                    
+                    const totalDays = Math.round((taskEndDate - taskStartDate) / oneDay) + 1;
+                    const totalAccommodation = parseFloat(row.querySelector(".coklu-accommodation").value) || 0;
+                    // Konaklama gün sayısı (toplam gün - 1)
+                    const geceSayisi = Math.max(1, totalDays - 1);
+
+                    // --- DURUM A: TEK BİR YERE GİDİLDİ (SİNOP -> KASTAMONU -> SİNOP) ---
+                    // Kullanıcı sadece "Kastamonu" yazdıysa veya tek bir şehir varsa, tek satırda birleştir.
+                    if (stops.length === 1) {
+                        const destination = stops[0];
+                        const routeText = `${görevYeri} > ${destination} > ${görevYeri}`;
+                        
+                        // Konaklama Hesabı (Limitli)
+                        const limit = dailyRate * accommodationRate * geceSayisi;
+                        const reimbursableAccommodation = Math.min(totalAccommodation, limit);
+                        let attachedExpense = null;
+                        if (reimbursableAccommodation > 0) {
+                            attachedExpense = {
+                                type: `Konaklama (${geceSayisi} Gece)`,
+                                amount: reimbursableAccommodation
+                            };
+                        }
+
+                        // Bu göreve ait tüm taşıtları topla
+                        let attachedTransport = null;
+                        if (allTransportsForRow.length > 0) {
+                            attachedTransport = {
+                                type: allTransportsForRow.map(t => `${t.type} (${t.description})`).join(', '),
+                                amount: allTransportsForRow.reduce((sum, t) => sum + t.cost, 0)
+                            };
+                            allTransportsForRow.forEach(t => processedTransportIds.add(t.id));
+                        }
+
+                        // Tek bir satır oluştur
+                        allReportItems.push({
+                            sortDate: taskStartDate,
+                            type: 'gundelik',
+                            startDate: taskStartDate,
+                            endDate: taskEndDate,
+                            route: routeText,
+                            dayCount: totalDays,
+                            dailyRate: dailyRate,
+                            dailyAmount: dailyRate * totalDays,
+                            attachedTransport: attachedTransport,
+                            attachedExpense: attachedExpense
+                        });
+                    }
+                    // --- DURUM B: ZİNCİRLEME SEYAHAT (BARTIN - KARABÜK - KASTAMONU) ---
+                    // Eğer birden fazla durak varsa, gün gün işle ama aynı yerde kalınan günleri birleştir.
+                    else {
+                        let currentLoopDate = new Date(taskStartDate);
+                        let currentLocation = görevYeri; 
+                        let stopIndex = 0; 
+                        
+                        let lastReportEntry = null; // Birleştirme için son eklenen kaydı tutar
+
+                        for (let i = 0; i < totalDays; i++) {
+                            let routeText = "";
+                            let isMovement = false; // Yer değiştiriyor mu?
+
+                            // Son Gün (Dönüş)
+                            if (i === totalDays - 1) {
+                                let remainingStops = "";
+                                if (stopIndex < stops.length) {
+                                    remainingStops = " > " + stops.slice(stopIndex).join(" > ");
+                                }
+                                routeText = `${currentLocation}${remainingStops} > ${görevYeri}`;
+                                isMovement = true;
+                            } 
+                            // Ara Günler
+                            else {
+                                if (stopIndex < stops.length) {
+                                    const nextStop = stops[stopIndex];
+                                    routeText = `${currentLocation} > ${nextStop}`;
+                                    currentLocation = nextStop;
+                                    stopIndex++;
+                                    isMovement = true;
+                                } else {
+                                    // Duraklar bitti ama günler bitmedi (Demek ki son durakta kalıyor)
+                                    routeText = `${currentLocation} (Mahallinde)`;
+                                    isMovement = false;
+                                }
+                            }
+
+                            // O güne ait taşıtları bul
+                            const dateStr = currentLoopDate.toISOString().split('T')[0];
+                            const daysTransports = allTransportsForRow.filter(t => t.date === dateStr);
+                            let currentDayTransportCost = 0;
+                            let currentDayTransportDesc = [];
+                            
+                            if (daysTransports.length > 0) {
+                                currentDayTransportCost = daysTransports.reduce((sum, t) => sum + t.cost, 0);
+                                currentDayTransportDesc = daysTransports.map(t => `${t.type} (${t.description})`);
+                                daysTransports.forEach(t => processedTransportIds.add(t.id));
+                            }
+
+                            // Konaklama (Son geceye ekle - Zincirlemede son geceye yazarız)
+                            let currentDayAccommodation = 0;
+                            let expenseTypeStr = null;
+                            if (i === totalDays - 2 && totalAccommodation > 0) {
+                                const limit = dailyRate * accommodationRate * geceSayisi;
+                                const reimbursable = Math.min(totalAccommodation, limit);
+                                currentDayAccommodation = reimbursable;
+                                expenseTypeStr = `Konaklama (${geceSayisi} Gece)`;
+                            }
+
+                            // --- BİRLEŞTİRME MANTIĞI ---
+                            // Eğer bu bir hareket değilse (Mahallinde) VE önceki kayıt varsa, önceki kayda ekle.
+                            if (!isMovement && lastReportEntry && lastReportEntry.type === 'gundelik') {
+                                // Tarihi güncelle (Bitiş tarihini bugüne çek)
+                                lastReportEntry.endDate = new Date(currentLoopDate);
+                                // Gün sayısını artır
+                                lastReportEntry.dayCount += 1;
+                                lastReportEntry.dailyAmount += dailyRate;
+                                
+                                // Varsa masrafları ekle
+                                if (currentDayTransportCost > 0) {
+                                    if (!lastReportEntry.attachedTransport) lastReportEntry.attachedTransport = { type: '', amount: 0 };
+                                    lastReportEntry.attachedTransport.amount += currentDayTransportCost;
+                                    lastReportEntry.attachedTransport.type += (lastReportEntry.attachedTransport.type ? ', ' : '') + currentDayTransportDesc.join(', ');
+                                }
+                                if (currentDayAccommodation > 0) {
+                                    if (!lastReportEntry.attachedExpense) lastReportEntry.attachedExpense = { type: '', amount: 0 };
+                                    lastReportEntry.attachedExpense.amount += currentDayAccommodation;
+                                    lastReportEntry.attachedExpense.type = expenseTypeStr;
+                                }
+                            } 
+                            // Yeni satır oluştur
+                            else {
+                                const newEntry = {
+                                    sortDate: new Date(currentLoopDate),
+                                    type: 'gundelik',
+                                    startDate: new Date(currentLoopDate),
+                                    endDate: new Date(currentLoopDate), // Şimdilik sadece bugün
+                                    route: routeText,
+                                    dayCount: 1,
+                                    dailyRate: dailyRate,
+                                    dailyAmount: dailyRate,
+                                    attachedTransport: currentDayTransportCost > 0 ? { type: currentDayTransportDesc.join(', '), amount: currentDayTransportCost } : null,
+                                    attachedExpense: currentDayAccommodation > 0 ? { type: expenseTypeStr, amount: currentDayAccommodation } : null
+                                };
+                                allReportItems.push(newEntry);
+                                lastReportEntry = newEntry; // Referansı tut
+                            }
+
+                            currentLoopDate.setDate(currentLoopDate.getDate() + 1);
+                        }
                     }
                 }
+            });
 
-                // Taşıt
-                const dateStr = currentLoopDate.toISOString().split('T')[0];
-                const daysTransports = allTransportsForRow.filter(t => t.date === dateStr);
-                let attachedTransport = null;
-                if (daysTransports.length > 0) {
-                    attachedTransport = {
-                        type: daysTransports.map(t => `${t.type} (${t.description})`).join(', '),
-                        amount: daysTransports.reduce((sum, t) => sum + t.cost, 0)
-                    };
-                    daysTransports.forEach(t => processedTransportIds.add(t.id));
+            // --- Sıralama ve Tablo Oluşturma ---
+            allReportItems.sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime());
+
+            let reportRows = [];
+            allReportItems.forEach(item => {
+                const f = n => n ? n.toFixed(2).replace(".", ",") : "0,00";
+                
+                // Tarih Formatlama (Tek gün mü, aralık mı?)
+                let dateStr = item.startDate.toLocaleDateString("tr-TR", { day: '2-digit', month: '2-digit', year: 'numeric' });
+                if (item.endDate.getTime() !== item.startDate.getTime()) {
+                    dateStr += " - " + item.endDate.toLocaleDateString("tr-TR", { day: '2-digit', month: '2-digit', year: 'numeric' });
                 }
+                
+                if (item.type === 'gundelik') {
+                    totalDailyAmount += item.dailyAmount;
+                    const konaklamaTuru = item.attachedExpense ? item.attachedExpense.type : '';
+                    const konaklamaTutari = item.attachedExpense ? item.attachedExpense.amount : 0;
+                    totalAccommodationCost += konaklamaTutari;
+                    const tasitTuru = item.attachedTransport ? item.attachedTransport.type : '';
+                    const tasitTutari = item.attachedTransport ? item.attachedTransport.amount : 0;
+                    totalTransportCost += tasitTutari;
 
-                // Konaklama (Son geceye toplam yazar)
-                let attachedExpense = null;
-                if (i === totalDays - 2 && totalAccommodation > 0) {
-                    const limit = dailyRate * accommodationRate * geceSayisi;
-                    const reimbursable = Math.min(totalAccommodation, limit);
-                    attachedExpense = {
-                        type: `Konaklama (${geceSayisi} Gece Toplamı)`,
-                        amount: reimbursable
-                    };
+                    const expenseTuru = [konaklamaTuru, tasitTuru].filter(Boolean).join(' + ');
+                    const expenseTutari = konaklamaTutari + tasitTutari;
+                    const total = item.dailyAmount + expenseTutari;
+
+                    reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td>${item.start || ''}</td><td>${item.end || ''}</td><td>${item.dayCount}</td><td>${f(item.dailyRate)}</td><td>${f(item.dailyAmount)}</td><td>${expenseTuru}</td><td>${f(expenseTutari)}</td><td></td><td></td><td>${f(total)}</td></tr>`);
+                } else if (item.type === 'tasit') {
+                    totalTransportCost += item.expenseAmount;
+                    reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td></td><td></td><td></td><td></td><td></td><td>${item.expenseType}</td><td>${f(item.expenseAmount)}</td><td></td><td></td><td>${f(item.expenseAmount)}</td></tr>`);
                 }
+            });
 
-                allReportItems.push({
-                    sortDate: new Date(currentLoopDate),
-                    type: 'gundelik',
-                    date: new Date(currentLoopDate),
-                    route: routeText,
-                    dayCount: 1,
-                    dailyRate: dailyRate,
-                    dailyAmount: dailyRate,
-                    attachedTransport: attachedTransport,
-                    attachedExpense: attachedExpense
-                });
-
-                currentLoopDate.setDate(currentLoopDate.getDate() + 1);
+            const grandTotal = totalDailyAmount + totalAccommodationCost + totalTransportCost;
+            let travelRowsHtml = reportRows.join("");
+            const maxRows = 15;
+            for (let i = reportRows.length; i < maxRows; i++) {
+                travelRowsHtml += `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
             }
 
-            // Kalan manuel taşıtlar
-            allTransportsForRow.filter(t => !processedTransportIds.has(t.id)).forEach(t => {
-                allReportItems.push({
-                    sortDate: new Date(t.date),
-                    type: 'tasit',
-                    date: new Date(t.date),
-                    route: t.description,
-                    expenseType: t.type,
-                    expenseAmount: t.cost
-                });
-            });
+            // HTML Çıktısı
+            return `
+            <table class="main-content-table">
+            <thead>
+                <tr class="header-info-row">
+                    <td colspan="1" class="label-cell">Adı Soyadı</td>
+                    <td colspan="1" class="value-cell left-align">${document.getElementById("fullName").value}</td>
+                    <td colspan="6" rowspan="4" class="title-cell">YURTİÇİ / GEÇİCİ GÖREV YOLLUĞU BİLDİRİMİ</td>
+                    <td colspan="4" class="value-cell" style="border-bottom: 1px solid transparent !important;"> </td> 
+                </tr>
+                <tr class="header-info-row">
+                    <td colspan="1" class="label-cell">Unvanı</td>
+                    <td colspan="1" class="value-cell left-align">${document.getElementById("title").value}</td>
+                    <td colspan="4" class="value-cell" style="border-top: 1px solid transparent !important;"> </td>
+                </tr>
+                <tr class="header-info-row">
+                    <td colspan="1" class="label-cell">Aylık Kadro Derecesi ve<br>Ek Göstergesi</td>
+                    <td colspan="1" class="value-cell left-align">${document.getElementById("degree").value}</td>
+                    <td colspan="1" class="label-cell">Dairesi</td>
+                    <td colspan="3" class="value-cell left-align">${document.getElementById("department").value}</td>
+                </tr>
+                <tr class="header-info-row">
+                    <td colspan="1" class="label-cell">Gündeliği</td>
+                    <td colspan="1" class="value-cell left-align">${dailyRate.toFixed(2).replace(",", ".")} TL</td>
+                    <td colspan="1" class="label-cell">Bütçe Yılı</td>
+                    <td colspan="3" class="value-cell">
+                        <div class="year-box-container" style="justify-content: center; padding: 0;">
+                            <span class="year-box">${y1}</span>
+                            <span class="year-box">${y2}</span>
+                            <span class="year-box">${y3}</span>
+                            <span class="year-box">${y4}</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="main-header">
+                    <th rowspan="2" style="width: 8%;">Yolculuk ve Oturma Tarihleri</th>
+                    <th rowspan="2" style="width: 25%;">Nereden Nereye Yolculuk Edildiği veya Nerede Oturduğu</th>
+                    <th colspan="2" style="width: 7%;">Hareket Saatleri</th>
+                    <th rowspan="2" style="width: 3%; line-height: 1;">Gün<br>Sayısı</th>
+                    <th colspan="2" style="width: 11%;">GÜNDELİKLER</th>
+                    <th colspan="2" style="width: 31.5%;">TAŞIT VE ZORUNLU GİDERLER</th>
+                    <th rowspan="2" style="width: 3%;">Dövizin Cinsi</th>
+                    <th rowspan="2" style="width: 3%;">Kuru</th>
+                    <th rowspan="2" style="width: 8.5%;">Toplam Tutar</th>
+                </tr>
+                <tr class="main-header">
+                    <th style="width: 3.5%;">Gidiş</th>
+                    <th style="width: 3.5%;">Dönüş</th>
+                    <th style="width: 5.5%;">Bir Günlüğü</th>
+                    <th style="width: 5.5%;">Tutarı</th>
+                    <th style="width: 27.5%;">Çeşidi ve Mevkii</th>
+                    <th style="width: 4%;">Tutarı</th>
+                </tr>
+            </thead>
+            <tbody>${travelRowsHtml}</tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="6" style="text-align:right; padding-right:10px;">TOPLAM</td>
+                    <td>${totalDailyAmount.toFixed(2).replace(".", ",")}</td>
+                    <td></td>
+                    <td>${(totalAccommodationCost + totalTransportCost).toFixed(2).replace(".", ",")}</td>
+                    <td colspan="2"></td>
+                    <td>${grandTotal.toFixed(2).replace(".", ",")}</td>
+                </tr>
+            </tfoot>
+            </table>
+            
+            <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${grandTotal > 0 ? numberToWordsTR(grandTotal) : 'SIFIR'} harcamaya ait bildirimdir.</p>
+            
+            <table class="footer-table signature-section" style="margin-top:10px;">
+                <tr>
+                    <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
+                        <p>... / ... / ${document.getElementById("budgetYear").value}</p>
+                        <p>Birim Yetkilisi (*)</p>
+                        <p>(İmza)</p><br><br>
+                        <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("amirAdi").value}</span></p>
+                        <p>Unvanı : <span contenteditable="true">${document.getElementById("amirUnvani").value}</span></p>
+                    </td>
+                    <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
+                        <p>... / ... / ${document.getElementById("budgetYear").value}</p>
+                        <p>Bildirim Sahibi</p>
+                        <p>(İmza)</p><br><br>
+                        <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("fullName").value}</span></p>
+                        <p>Unvanı : <span contenteditable="true">${document.getElementById("title").value}</span></p>
+                    </td>
+                </tr>
+            </table>`;
         }
-    });
-
-    // --- Sıralama ve Tablo Oluşturma ---
-    allReportItems.sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime());
-
-    let reportRows = [];
-    allReportItems.forEach(item => {
-        const f = n => n ? n.toFixed(2).replace(".", ",") : "0,00";
-        let dateStr = item.date.toLocaleDateString("tr-TR");
-        
-        if (item.type === 'gundelik') {
-            totalDailyAmount += item.dailyAmount;
-            const konaklamaTuru = item.attachedExpense ? item.attachedExpense.type : '';
-            const konaklamaTutari = item.attachedExpense ? item.attachedExpense.amount : 0;
-            totalAccommodationCost += konaklamaTutari;
-            const tasitTuru = item.attachedTransport ? item.attachedTransport.type : '';
-            const tasitTutari = item.attachedTransport ? item.attachedTransport.amount : 0;
-            totalTransportCost += tasitTutari;
-
-            const expenseTuru = [konaklamaTuru, tasitTuru].filter(Boolean).join(' + ');
-            const expenseTutari = konaklamaTutari + tasitTutari;
-            const total = item.dailyAmount + expenseTutari;
-
-            reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td>${item.start || ''}</td><td>${item.end || ''}</td><td>${item.dayCount}</td><td>${f(item.dailyRate)}</td><td>${f(item.dailyAmount)}</td><td>${expenseTuru}</td><td>${f(expenseTutari)}</td><td></td><td></td><td>${f(total)}</td></tr>`);
-        } else if (item.type === 'tasit') {
-            totalTransportCost += item.expenseAmount;
-            reportRows.push(`<tr><td>${dateStr}</td><td>${item.route}</td><td></td><td></td><td></td><td></td><td></td><td>${item.expenseType}</td><td>${f(item.expenseAmount)}</td><td></td><td></td><td>${f(item.expenseAmount)}</td></tr>`);
-        }
-    });
-
-    const grandTotal = totalDailyAmount + totalAccommodationCost + totalTransportCost;
-    let travelRowsHtml = reportRows.join("");
-    const maxRows = 15;
-    for (let i = reportRows.length; i < maxRows; i++) {
-        travelRowsHtml += `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
-    }
-
-    // HTML Çıktısı
-    return `
-    <table class="main-content-table">
-    <thead>
-        <tr class="header-info-row">
-            <td colspan="1" class="label-cell">Adı Soyadı</td>
-            <td colspan="1" class="value-cell left-align">${document.getElementById("fullName").value}</td>
-            <td colspan="6" rowspan="4" class="title-cell">YURTİÇİ / GEÇİCİ GÖREV YOLLUĞU BİLDİRİMİ</td>
-            <td colspan="4" class="value-cell" style="border-bottom: 1px solid transparent !important;"> </td> 
-        </tr>
-        <tr class="header-info-row">
-            <td colspan="1" class="label-cell">Unvanı</td>
-            <td colspan="1" class="value-cell left-align">${document.getElementById("title").value}</td>
-            <td colspan="4" class="value-cell" style="border-top: 1px solid transparent !important;"> </td>
-        </tr>
-        <tr class="header-info-row">
-            <td colspan="1" class="label-cell">Aylık Kadro Derecesi ve<br>Ek Göstergesi</td>
-            <td colspan="1" class="value-cell left-align">${document.getElementById("degree").value}</td>
-            <td colspan="1" class="label-cell">Dairesi</td>
-            <td colspan="3" class="value-cell left-align">${document.getElementById("department").value}</td>
-        </tr>
-        <tr class="header-info-row">
-            <td colspan="1" class="label-cell">Gündeliği</td>
-            <td colspan="1" class="value-cell left-align">${dailyRate.toFixed(2).replace(",", ".")} TL</td>
-            <td colspan="1" class="label-cell">Bütçe Yılı</td>
-            <td colspan="3" class="value-cell">
-                <div class="year-box-container" style="justify-content: center; padding: 0;">
-                    <span class="year-box">${y1}</span>
-                    <span class="year-box">${y2}</span>
-                    <span class="year-box">${y3}</span>
-                    <span class="year-box">${y4}</span>
-                </div>
-            </td>
-        </tr>
-        <tr class="main-header">
-            <th rowspan="2" style="width: 8%;">Yolculuk ve Oturma Tarihleri</th>
-            <th rowspan="2" style="width: 25%;">Nereden Nereye Yolculuk Edildiği veya Nerede Oturduğu</th>
-            <th colspan="2" style="width: 7%;">Hareket Saatleri</th>
-            <th rowspan="2" style="width: 3%; line-height: 1;">Gün<br>Sayısı</th>
-            <th colspan="2" style="width: 11%;">GÜNDELİKLER</th>
-            <th colspan="2" style="width: 31.5%;">TAŞIT VE ZORUNLU GİDERLER</th>
-            <th rowspan="2" style="width: 3%;">Dövizin Cinsi</th>
-            <th rowspan="2" style="width: 3%;">Kuru</th>
-            <th rowspan="2" style="width: 8.5%;">Toplam Tutar</th>
-        </tr>
-        <tr class="main-header">
-            <th style="width: 3.5%;">Gidiş</th>
-            <th style="width: 3.5%;">Dönüş</th>
-            <th style="width: 5.5%;">Bir Günlüğü</th>
-            <th style="width: 5.5%;">Tutarı</th>
-            <th style="width: 27.5%;">Çeşidi ve Mevkii</th>
-            <th style="width: 4%;">Tutarı</th>
-        </tr>
-    </thead>
-    <tbody>${travelRowsHtml}</tbody>
-    <tfoot>
-        <tr class="total-row">
-            <td colspan="6" style="text-align:right; padding-right:10px;">TOPLAM</td>
-            <td>${totalDailyAmount.toFixed(2).replace(".", ",")}</td>
-            <td></td>
-            <td>${(totalAccommodationCost + totalTransportCost).toFixed(2).replace(".", ",")}</td>
-            <td colspan="2"></td>
-            <td>${grandTotal.toFixed(2).replace(".", ",")}</td>
-        </tr>
-    </tfoot>
-    </table>
-    
-    <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${grandTotal > 0 ? numberToWordsTR(grandTotal) : 'SIFIR'} harcamaya ait bildirimdir.</p>
-    
-    <table class="footer-table signature-section" style="margin-top:10px;">
-        <tr>
-            <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
-                <p>... / ... / ${document.getElementById("budgetYear").value}</p>
-                <p>Birim Yetkilisi (*)</p>
-                <p>(İmza)</p><br><br>
-                <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("amirAdi").value}</span></p>
-                <p>Unvanı : <span contenteditable="true">${document.getElementById("amirUnvani").value}</span></p>
-            </td>
-            <td style="width:50%; text-align:center; padding: 10px; vertical-align: top;">
-                <p>... / ... / ${document.getElementById("budgetYear").value}</p>
-                <p>Bildirim Sahibi</p>
-                <p>(İmza)</p><br><br>
-                <p>Adı Soyadı : <span contenteditable="true">${document.getElementById("fullName").value}</span></p>
-                <p>Unvanı : <span contenteditable="true">${document.getElementById("title").value}</span></p>
-            </td>
-        </tr>
-    </table>`;
-}
 
         function generateAraziIfaHTML() {
             const period = document.getElementById("araziDonem").value; const year = parseInt(document.getElementById("budgetYear").value); const görevYeri = document.getElementById("görevYeri").value || "Sinop"; const amirAdi = document.getElementById("araziAmirAdi").value || document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("araziAmirUnvani").value || document.getElementById("amirUnvani").value; const periodMap = { 1: [0, 2], 2: [3, 5], 3: [6, 8], 4: [9, 11] }; const [startMonth, endMonth] = periodMap[period];
