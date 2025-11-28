@@ -6928,159 +6928,202 @@ const styles = `
 
         function updateTravelCounter() { const count = document.querySelectorAll(".travel-card").length; document.getElementById("travel-counter").textContent = count; }
 
+
         function addTravelEntry(entry = {}, isInitialLoad = false) {
-    if (!isInitialLoad) playSound('click');
-    const listContainer = document.getElementById("travel-list"); const cardId = `travel-${travelIdCounter++}`;
-    const card = document.createElement("div"); card.className = "travel-card"; card.id = cardId;
-    if (!isInitialLoad) { card.classList.add('newly-added'); setTimeout(() => card.classList.remove('newly-added'), 600); }
-    const today = new Date().toISOString().split('T')[0];
-    const defaults = { type: "gunubirlik", gorevTipi: "normal", date: today, route: "", start: "08:00", end: "17:00", konu: "Av ve Yaban Hayatı ile İlgili Saha İşleri", accommodation: "", startDate: today, endDate: today, startTime: "08:00", endTime: "17:00", totalAccommodation: "", gidisSuresi: 1, donusSuresi: 1, transport: [], isCollapsed: isInitialLoad };
-    const data = { ...defaults, ...entry };
-    if (isInitialLoad) data.isCollapsed = true;
-    
-    card.innerHTML = `
-    <div class="travel-card-summary" onclick="toggleCardCollapse(this)"></div>
-    <div class="travel-card-content">
-        <div class="travel-progress-bar"><div class="travel-progress-fill"></div></div>
-        <div class="travel-form-grid">
-            <!-- Adım 1: Görev Türü -->
-            <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent);">
-                <div class="input-group">
-                    <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="layers"></i> Görev Türü Seçimi</label>
-                    <select id="${cardId}-type" class="gorev-tipi-select" onchange="updateRowType(this)" style="font-size: 15px; font-weight: 600;"><option value="gunubirlik" ${data.type === 'gunubirlik' ? 'selected' : ''}>📅 Günübirlik Görev</option><option value="coklu" ${data.type === 'coklu' ? 'selected' : ''}>🏨 Çoklu Gün / Konaklama</option></select>
-                    <small><i data-lucide="info"></i>Görev türünü seçtikten sonra diğer alanlar açılacak</small>
-                </div>
-                
-                <div class="step-content" id="${cardId}-step2" style="display:none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);">
-                    <div class="input-group">
-                        <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="briefcase"></i> Görev Kategorisi</label>
-                        <div class="gorev-tipi-options">
-                            <label class="gorev-tipi-option ${data.gorevTipi === 'normal' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="normal" ${data.gorevTipi === 'normal' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 🎯 Normal Görev</label>
-                            <label class="gorev-tipi-option ${data.gorevTipi === 'seminer' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="seminer" ${data.gorevTipi === 'seminer' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 📚 Seminer/Eğitim</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            if (!isInitialLoad) playSound('click');
+            const listContainer = document.getElementById("travel-list");
+            const cardId = `travel-${travelIdCounter++}`;
+            const card = document.createElement("div");
+            card.className = "travel-card";
+            card.id = cardId;
             
-            <!-- Adım 2: Tarih & Saat -->
-            <div class="travel-form-step" id="${cardId}-step3" style="background: linear-gradient(135deg, transparent, var(--accent-color-translucent)); display:none;">
-                <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="calendar-clock"></i> Tarih & Saat Bilgileri</label>
-                     <div class="gunubirlik-fields" ${data.type === 'coklu' ? 'style="display:none;"' : ''}>
-                        <input type="date" class="travel-date" value="${data.date}" style="margin-bottom: 0.75rem;" title="Görev tarihi">
-                        <div class="date-time-fields-grid">
-                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Gidiş Saati</label>
-                                <input type="time" class="travel-start" value="${data.start}" title="Görev başlangıç saati">
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Dönüş Saati</label>
-                                <input type="time" class="travel-end" value="${data.end}" title="Görev bitiş saati">
-                            </div>
-                        </div>
-                        <small><i data-lucide="info"></i>Görev tarihini ve saatlerini girin</small>
-                    </div>
-                    <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
-                       <div class="date-time-fields-grid" style="margin-bottom: 0.75rem;">
-                            <input type="date" class="coklu-start-date" value="${data.startDate}" title="Görev başlangıç tarihi">
-                            <input type="date" class="coklu-end-date" value="${data.endDate}" title="Görev bitiş tarihi">
-                        </div>
-                        <div class="date-time-fields-grid">
-                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i> Gidiş Süresi (Gün)</label>
-                                <input type="number" class="coklu-gidis-suresi" value="${data.gidisSuresi}" min="1" title="Gidiş yolculuğu kaç gün sürdü?">
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Dönüş Süresi (Gün)</label>
-                                <input type="number" class="coklu-donus-suresi" value="${data.donusSuresi}" min="1" title="Dönüş yolculuğu kaç gün sürdü?">
-                            </div>
-                        </div>
-                        <small><i data-lucide="info"></i>Başlangıç-bitiş tarihleri ve yol süresini girin</small>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Adım 3: Görev Detayları -->
-            <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent); grid-column: span 2;">
-                <div class="travel-form-row-2col">
-                    <div class="input-group">
-                        <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="map-pin"></i> Güzergah</label>
-                        <div style="position:relative; z-index: 10003;">
-                            <input type="text" class="travel-route" placeholder="Örn: Karabük - Bartın - Zonguldak" value="${data.route}">
-                            <div class="autocomplete-items" style="display:none;"></div>
-                        </div>
-                        <!-- GÜZERGAH UYARI METNİ -->
-                        <small style="color: var(--primary-color); margin-top:5px; font-size: 0.75rem; font-weight:600; text-align:center; display: block !important; opacity:0.9;">
-                            <i data-lucide="info" style="width:12px; height:12px; vertical-align:middle; margin-right:2px;"></i> 
-                            Zincirleme seyahat için şehirlerin arasına <b>tire (-)</b> veya <b>virgül (,)</b> koyunuz.
-                        </small>
-                    </div>
-                    <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="file-text"></i> Görev Konusu</label><div style="position:relative; z-index: 10003;"><input type="text" class="travel-konu" placeholder="örn: Av ve Yaban Hayatı Saha İşleri" value="${data.konu}"><div class="autocomplete-items" style="display:none;"></div></div></div>
-                </div>
-                
-                <!-- Konaklama Ücreti (Sadece Çoklu için) -->
-                <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
-                    <div class="input-group" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="home"></i> Toplam Konaklama Ücreti (TL)</label><input type="number" class="coklu-accommodation" placeholder="0.00" value="${data.totalAccommodation}" title="Konaklama faturası toplam tutarı"><small style="display: block !important;"><i data-lucide="info"></i>Konaklama faturası tutarını girin</small></div>
-                </div>
-            </div>
-
-        <!-- Adım 3: Taşıt Giderleri -->
-        <div class="transport-details travel-form-step" data-step="3. Adım" style="border-color: var(--primary-color);">
-            <h5 class="transport-details-header" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="car"></i> Taşıt Giderleri</h5>
-            <div class="transport-list"></div>
-            <button class="add-transport-btn" onclick="addTransportRow(this)"><i data-lucide="plus"></i> Taşıt Gideri Ekle</button>
-        </div>
-
-        <div class="travel-card-actions">
-            <div style="display: flex; gap: 0.75rem; margin-left: auto;">
-                <button class="remove-btn" onclick="removeTravelEntry(event, '${cardId}')"><i data-lucide="trash-2"></i> Sil</button>
-                <button class="save-and-close-btn" onclick="requestCloseTravelCard(this, true)"><i data-lucide="check-circle"></i> Kaydet ve Kapat</button>
-            </div>
-        </div>
-    </div>`;
-    listContainer.appendChild(card);
-
-    const overlapCheckHandler = (e) => handleDateOrTimeChange(e.target);
-    const storePreviousValueHandler = (e) => { e.target.dataset.previousValue = e.target.value; };
-
-    card.querySelectorAll('input, select, textarea').forEach(input => {
-        input.addEventListener('change', () => {
-            saveData();
-            updateTravelProgress(card);
-        });
-        input.addEventListener('input', () => {
-            if (input.classList.contains('error-highlight')) {
-                input.classList.remove('error-highlight');
+            if (!isInitialLoad) {
+                card.classList.add('newly-added');
+                setTimeout(() => card.classList.remove('newly-added'), 600);
             }
-            updateTravelProgress(card);
-        });
-    });
+            
+            const today = new Date().toISOString().split('T')[0];
+            const defaults = {
+                type: "gunubirlik",
+                gorevTipi: "normal",
+                date: today,
+                route: "",
+                start: "08:00",
+                end: "17:00",
+                konu: "Av ve Yaban Hayatı ile İlgili Saha İşleri",
+                accommodation: "",
+                startDate: today,
+                endDate: today,
+                startTime: "08:00",
+                endTime: "17:00",
+                totalAccommodation: "",
+                gidisSuresi: 1,
+                donusSuresi: 1,
+                transport: [],
+                isCollapsed: isInitialLoad
+            };
+            
+            const data = { ...defaults, ...entry };
+            if (isInitialLoad) data.isCollapsed = true;
 
-    const dateOrTimeInputs = card.querySelectorAll('.travel-date, .travel-start, .travel-end, .coklu-start-date, .coklu-end-date');
-    dateOrTimeInputs.forEach(input => {
-        input.addEventListener('focus', storePreviousValueHandler);
-        input.addEventListener('change', overlapCheckHandler);
-    });
+            card.innerHTML = `
+            <div class="travel-card-summary" onclick="toggleCardCollapse(this)"></div>
+            <div class="travel-card-content">
+                <div class="travel-progress-bar"><div class="travel-progress-fill"></div></div>
+                
+                <!-- ÜST KISIM: FORM ALANLARI (Izgara Yapısı) -->
+                <div class="travel-form-grid">
+                    <!-- Adım 1: Görev Türü -->
+                    <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent);">
+                        <div class="input-group">
+                            <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="layers"></i> Görev Türü Seçimi</label>
+                            <select id="${cardId}-type" class="gorev-tipi-select" onchange="updateRowType(this)" style="font-size: 15px; font-weight: 600;"><option value="gunubirlik" ${data.type === 'gunubirlik' ? 'selected' : ''}>📅 Günübirlik Görev</option><option value="coklu" ${data.type === 'coklu' ? 'selected' : ''}>🏨 Çoklu Gün / Konaklama</option></select>
+                            <small><i data-lucide="info"></i>Görev türünü seçtikten sonra diğer alanlar açılacak</small>
+                        </div>
+                        
+                        <div class="step-content" id="${cardId}-step2" style="display:none; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);">
+                            <div class="input-group">
+                                <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="briefcase"></i> Görev Kategorisi</label>
+                                <div class="gorev-tipi-options">
+                                    <label class="gorev-tipi-option ${data.gorevTipi === 'normal' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="normal" ${data.gorevTipi === 'normal' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 🎯 Normal Görev</label>
+                                    <label class="gorev-tipi-option ${data.gorevTipi === 'seminer' ? 'active' : ''}"><input type="radio" name="${cardId}-gorevTipi" value="seminer" ${data.gorevTipi === 'seminer' ? 'checked' : ''} onchange="updateGorevTipi(this)"> 📚 Seminer/Eğitim</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Adım 2: Tarih & Saat -->
+                    <div class="travel-form-step" id="${cardId}-step3" style="background: linear-gradient(135deg, transparent, var(--accent-color-translucent)); display:none;">
+                        <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="calendar-clock"></i> Tarih & Saat Bilgileri</label>
+                             <div class="gunubirlik-fields" ${data.type === 'coklu' ? 'style="display:none;"' : ''}>
+                                <input type="date" class="travel-date" value="${data.date}" style="margin-bottom: 0.75rem;" title="Görev tarihi">
+                                <div class="date-time-fields-grid">
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Gidiş Saati</label>
+                                        <input type="time" class="travel-start" value="${data.start}" title="Görev başlangıç saati">
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Dönüş Saati</label>
+                                        <input type="time" class="travel-end" value="${data.end}" title="Görev bitiş saati">
+                                    </div>
+                                </div>
+                                <small><i data-lucide="info"></i>Görev tarihini ve saatlerini girin</small>
+                            </div>
+                            <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
+                               <div class="date-time-fields-grid" style="margin-bottom: 0.75rem;">
+                                    <input type="date" class="coklu-start-date" value="${data.startDate}" title="Görev başlangıç tarihi">
+                                    <input type="date" class="coklu-end-date" value="${data.endDate}" title="Görev bitiş tarihi">
+                                </div>
+                                <div class="date-time-fields-grid">
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-right" style="width: 14px; height: 14px;"></i> Gidiş Süresi (Gün)</label>
+                                        <input type="number" class="coklu-gidis-suresi" value="${data.gidisSuresi}" min="1" title="Gidiş yolculuğu kaç gün sürdü?">
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.35rem;"><i data-lucide="arrow-left" style="width: 14px; height: 14px;"></i> Dönüş Süresi (Gün)</label>
+                                        <input type="number" class="coklu-donus-suresi" value="${data.donusSuresi}" min="1" title="Dönüş yolculuğu kaç gün sürdü?">
+                                    </div>
+                                </div>
+                                <small><i data-lucide="info"></i>Başlangıç-bitiş tarihleri ve yol süresini girin</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Adım 3: Görev Detayları -->
+                    <div class="travel-form-step" style="background: linear-gradient(135deg, var(--primary-color-translucent), transparent); grid-column: span 2; margin-bottom: 0;">
+                        <div class="travel-form-row-2col">
+                            <div class="input-group">
+                                <label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="map-pin"></i> Güzergah</label>
+                                <div style="position:relative; z-index: 10003;">
+                                    <input type="text" class="travel-route" placeholder="Örn: Karabük - Bartın - Zonguldak" value="${data.route}">
+                                    <div class="autocomplete-items" style="display:none;"></div>
+                                </div>
+                                <!-- GÜZERGAH UYARI METNİ -->
+                                <small style="color: var(--primary-color); margin-top:5px; font-size: 0.75rem; font-weight:600; text-align:center; display: block !important; opacity:0.9;">
+                                    <i data-lucide="info" style="width:12px; height:12px; vertical-align:middle; margin-right:2px;"></i> 
+                                    Zincirleme seyahat için şehirlerin arasına <b>tire (-)</b> veya <b>virgül (,)</b> koyunuz.
+                                </small>
+                            </div>
+                            <div class="input-group"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="file-text"></i> Görev Konusu</label><div style="position:relative; z-index: 10003;"><input type="text" class="travel-konu" placeholder="örn: Av ve Yaban Hayatı Saha İşleri" value="${data.konu}"><div class="autocomplete-items" style="display:none;"></div></div></div>
+                        </div>
+                        
+                        <!-- Konaklama Ücreti (Sadece Çoklu için) -->
+                        <div class="coklu-fields" ${data.type === 'gunubirlik' ? 'style="display:none;"' : ''}>
+                            <div class="input-group" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color);"><label style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="home"></i> Toplam Konaklama Ücreti (TL)</label><input type="number" class="coklu-accommodation" placeholder="0.00" value="${data.totalAccommodation}" title="Konaklama faturası toplam tutarı"><small style="display: block !important;"><i data-lucide="info"></i>Konaklama faturası tutarını girin</small></div>
+                        </div>
+                    </div>
+                </div>
 
-    if (data.transport && data.transport.length > 0) { const transportContainer = card.querySelector('.transport-list'); data.transport.forEach(transportItem => addTransportRow(transportContainer.nextElementSibling, transportItem)); }
-    updateTravelCounter(); updateNightCounter(card.querySelector(".coklu-start-date")); updateGorevTipi(card.querySelector(`input[name="${cardId}-gorevTipi"]:checked`));
-    attachAutocomplete(card.querySelector(".travel-route"), dynamicLocations);
-    attachAutocomplete(card.querySelector(".travel-konu"), dynamicTopics);
-    updateSummaryView(card);
-    if (data.isCollapsed) {
-        card.classList.add('is-collapsed');
-    } else {
-        const step2 = document.getElementById(cardId + '-step2');
-        const step3 = document.getElementById(cardId + '-step3');
-        if (step2) step2.style.display = 'block';
-        if (step3) step3.style.display = 'block';
-    }
-    card.dataset.savedState = getCardState(card);
-    lucide.createIcons();
+                <!-- ALT KISIM: TAŞIT GİDERLERİ (BOYDAN BOYA) -->
+                <div class="transport-details travel-form-step" data-step="3. Adım" style="border-color: var(--primary-color); margin-top: 15px; width: 100%;">
+                    <h5 class="transport-details-header" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.5rem;"><i data-lucide="car"></i> Taşıt Giderleri</h5>
+                    <div class="transport-list"></div>
+                    <button class="add-transport-btn" onclick="addTransportRow(this)"><i data-lucide="plus"></i> Taşıt Gideri Ekle</button>
+                </div>
 
-    if (!isInitialLoad) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-}
+                <!-- EN ALT: BUTONLAR -->
+                <div class="travel-card-actions" style="margin-top: 20px; border-top: 1px solid var(--border-color);">
+                    <div style="display: flex; gap: 0.75rem; margin-left: auto;">
+                        <button class="remove-btn" onclick="removeTravelEntry(event, '${cardId}')"><i data-lucide="trash-2"></i> Sil</button>
+                        <button class="save-and-close-btn" onclick="requestCloseTravelCard(this, true)"><i data-lucide="check-circle"></i> Kaydet ve Kapat</button>
+                    </div>
+                </div>
+            </div>`;
+            listContainer.appendChild(card);
+
+            const overlapCheckHandler = (e) => handleDateOrTimeChange(e.target);
+            const storePreviousValueHandler = (e) => {
+                e.target.dataset.previousValue = e.target.value;
+            };
+
+            card.querySelectorAll('input, select, textarea').forEach(input => {
+                input.addEventListener('change', () => {
+                    saveData();
+                    updateTravelProgress(card);
+                });
+                input.addEventListener('input', () => {
+                    if (input.classList.contains('error-highlight')) {
+                        input.classList.remove('error-highlight');
+                    }
+                    updateTravelProgress(card);
+                });
+            });
+
+            const dateOrTimeInputs = card.querySelectorAll('.travel-date, .travel-start, .travel-end, .coklu-start-date, .coklu-end-date');
+            dateOrTimeInputs.forEach(input => {
+                input.addEventListener('focus', storePreviousValueHandler);
+                input.addEventListener('change', overlapCheckHandler);
+            });
+
+            if (data.transport && data.transport.length > 0) {
+                const transportContainer = card.querySelector('.transport-list');
+                data.transport.forEach(transportItem => addTransportRow(transportContainer.nextElementSibling, transportItem));
+            }
+            updateTravelCounter();
+            updateNightCounter(card.querySelector(".coklu-start-date"));
+            updateGorevTipi(card.querySelector(`input[name="${cardId}-gorevTipi"]:checked`));
+            attachAutocomplete(card.querySelector(".travel-route"), dynamicLocations);
+            attachAutocomplete(card.querySelector(".travel-konu"), dynamicTopics);
+            updateSummaryView(card);
+            if (data.isCollapsed) {
+                card.classList.add('is-collapsed');
+            } else {
+                const step2 = document.getElementById(cardId + '-step2');
+                const step3 = document.getElementById(cardId + '-step3');
+                if (step2) step2.style.display = 'block';
+                if (step3) step3.style.display = 'block';
+            }
+            card.dataset.savedState = getCardState(card);
+            lucide.createIcons();
+
+            if (!isInitialLoad) {
+                card.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }
+
         function handleTransportChange(selectElement) {
             const transportEntry = selectElement.closest('.transport-entry'); if (!transportEntry) return;
             const descriptionInput = transportEntry.querySelector('.transport-description'); if (!descriptionInput) return;
