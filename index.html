@@ -6179,6 +6179,8 @@ button.add-btn:active {
             playSound('save');
             const existingModal = document.getElementById('in-app-report-modal');
             if (existingModal) { existingModal.remove(); }
+            
+            // --- GÜNCELLENEN STİLLER (DÜZENLEME MODU İÇİN) ---
             const viewStyles = `
             #in-app-report-modal { position: fixed; inset: 0; z-index: 10002; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease-out; }
             @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -6196,8 +6198,12 @@ button.add-btn:active {
             .report-sheet-A4-portrait { width: 210mm; height: 296.8mm; }
             .report-sheet-A4-landscape { width: 297mm; height: 209.8mm; }
             .report-content { padding: 15mm; height: 100%; }
-            [contenteditable="true"] { outline: 2px solid transparent; transition: outline 0.2s ease; }
-            [contenteditable="true"]:focus { outline-color: var(--primary-color); background-color: #f0f9ff; }
+            
+            /* --- KRİTİK KISIM: GÖRÜNMEZ DÜZENLEME STİLLERİ --- */
+            /* Tıklayınca mavi çerçeve çıkmasın, imleç çıksın */
+            [contenteditable="true"] { outline: none !important; cursor: text; }
+            [contenteditable="true"]:focus { outline: none !important; background-color: transparent !important; box-shadow: none !important; }
+            
             ${customStyles}
         `;
             const modal = document.createElement('div');
@@ -6215,37 +6221,62 @@ button.add-btn:active {
         `;
             document.body.appendChild(modal);
             lucide.createIcons();
+
+            // --- OTOMATİK DÜZENLEME AKTİFLEŞTİRME ---
+            // Rapor alanı içindeki her şeyi bul ve düzenlenebilir yap
+            const reportArea = document.getElementById('report-print-area');
+            if (reportArea) {
+                // Tablo hücreleri, başlıklar, paragraflar, kalın yazılar, spanlar...
+                const editableElements = reportArea.querySelectorAll('td, th, p, span, b, strong, h3, h4, div:not(.report-sheet):not(.report-content)');
+                editableElements.forEach(el => {
+                    // Düzenlenebilir yap
+                    el.setAttribute('contenteditable', 'true');
+                    // Kırmızı alt çizgi (yazım denetimi) çıkmasın
+                    el.setAttribute('spellcheck', 'false');
+                });
+            }
+
             document.getElementById('close-report-btn').addEventListener('click', () => { modal.remove(); });
 
             const handlePrint = () => {
                 const printArea = document.getElementById('report-print-area');
+                // Yazdırmadan önce düzenleme özelliğini geçici olarak kaldır (imleç vs. çıkmasın)
                 const editables = printArea.querySelectorAll('[contenteditable="true"]');
                 editables.forEach(el => el.removeAttribute('contenteditable'));
+                
                 const printAreaHTML = printArea.innerHTML;
-                editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+                
+                // Geri yükle (iptal ederse düzenlemeye devam edebilsin)
+                editables.forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                    el.setAttribute('spellcheck', 'false');
+                });
 
                 triggerBrowserPrint(title, printAreaHTML, customStyles, pageOrientation);
             };
 
             document.getElementById('print-report-btn').addEventListener('click', handlePrint);
 
-            // --- DÜZELTME: BOŞ SAYFA SORUNU TAM OLARAK GİDERİLDİ ---
             const handlePDFDownload = async () => {
                 const printArea = document.getElementById('report-print-area');
+                // PDF almadan önce düzenleme özelliğini kaldır (temiz çıktı için)
                 const editables = printArea.querySelectorAll('[contenteditable="true"]');
                 editables.forEach(el => el.removeAttribute('contenteditable'));
 
                 const allPages = printArea.querySelectorAll('.report-sheet-wrapper');
                 if (allPages.length === 0) {
                     showToast('PDF oluşturulamadı: Rapor içeriği bulunamadı.', 'error');
-                    editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+                    // Hata olursa özelliği geri yükle
+                    editables.forEach(el => {
+                        el.setAttribute('contenteditable', 'true');
+                        el.setAttribute('spellcheck', 'false');
+                    });
                     return;
                 }
 
                 showToast('PDF oluşturuluyor, lütfen bekleyin...', 'info');
 
                 try {
-                    // Sadece .report-sheet elementlerini al (wrapper olmadan)
                     const reportSheets = [];
                     allPages.forEach(wrapper => {
                         const sheet = wrapper.querySelector('.report-sheet');
@@ -6256,22 +6287,22 @@ button.add-btn:active {
 
                     if (reportSheets.length === 0) {
                         showToast('PDF oluşturulamadı: Rapor içeriği bulunamadı.', 'error');
-                        editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+                        editables.forEach(el => {
+                            el.setAttribute('contenteditable', 'true');
+                            el.setAttribute('spellcheck', 'false');
+                        });
                         return;
                     }
 
-                    // Tek container'da tüm sayfaları birleştir
                     const pdfContainer = document.createElement('div');
                     pdfContainer.style.width = '100%';
 
                     reportSheets.forEach((sheet, index) => {
-                        // Her sayfanın stilini ayarla
                         sheet.style.pageBreakBefore = (index > 0) ? 'always' : 'auto';
                         sheet.style.pageBreakAfter = 'auto';
                         sheet.style.pageBreakInside = 'avoid';
                         sheet.style.margin = '0';
                         sheet.style.padding = '0';
-
                         pdfContainer.appendChild(sheet);
                     });
 
@@ -6303,7 +6334,11 @@ button.add-btn:active {
                     console.error('PDF indirme hatası:', error);
                     showToast('PDF indirme sırasında bir hata oluştu.', 'error');
                 } finally {
-                    editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+                    // İşlem bitince düzenleme özelliğini geri yükle
+                    editables.forEach(el => {
+                        el.setAttribute('contenteditable', 'true');
+                        el.setAttribute('spellcheck', 'false');
+                    });
                 }
             };
 
