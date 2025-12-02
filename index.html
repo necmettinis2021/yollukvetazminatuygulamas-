@@ -21,6 +21,12 @@
             --radius-md: 12px;
             --radius-lg: 18px;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --press-translate: 2px;
+            --press-scale: 0.98;
+            --hover-lift: -6px;
+            --hover-scale: 1.03;
+            --lever-ripple-duration: .38s;
+            --card-ripple-duration: .38s;
         }
 
         /* 🌸 SPRING THEME (Softer Colors) */
@@ -228,21 +234,111 @@
         body.theme-graphite {
             --primary-hue: 210;
             --secondary-hue: 0;
-            --primary-color: hsl(var(--primary-hue), 10%, 55%);
-            --primary-color-light: hsl(var(--primary-hue), 10%, 65%);
-            --primary-color-dark: hsl(var(--primary-hue), 10%, 45%);
+            --primary-color: hsl(var(--primary-hue), 12%, 60%);
+            --primary-color-light: hsl(var(--primary-hue), 12%, 70%);
+            --primary-color-dark: hsl(var(--primary-hue), 12%, 46%);
             --primary-color-translucent: hsla(var(--primary-hue), 10%, 55%, 0.1);
-            --accent-color: hsl(var(--secondary-hue), 0%, 80%);
-            --accent-color-dark: hsl(var(--secondary-hue), 0%, 70%);
+            --accent-color: hsl(var(--secondary-hue), 0%, 88%);
+            --accent-color-dark: hsl(var(--secondary-hue), 0%, 78%);
             --bg-start: #111827;
             --bg-end: #1f2937;
-            --card-bg: rgba(55, 65, 81, 0.6);
-            --text-primary: #f9fafb;
-            --text-secondary: #9ca3af;
-            --border-color: #374151;
-            --input-border-color: #4b5563;
+            --card-bg: rgba(55, 65, 81, 0.7);
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --border-color: #3f4a5a;
+            --input-border-color: #6b7280;
             --input-focus-ring: hsla(var(--primary-hue), 10%, 55%, 0.25);
+            --press-translate: 3px;
+            --press-scale: 0.97;
+            --hover-lift: -8px;
+            --hover-scale: 1.04;
+            --lever-ripple-duration: .45s;
+            --card-ripple-duration: .45s;
         }
+
+        body.theme-classic {
+            --primary-hue: 210;
+            --secondary-hue: 200;
+            --primary-color: hsl(var(--primary-hue), 60%, 52%);
+            --primary-color-light: hsl(var(--primary-hue), 60%, 64%);
+            --primary-color-dark: hsl(var(--primary-hue), 60%, 42%);
+            --primary-color-translucent: hsla(var(--primary-hue), 60%, 52%, 0.12);
+            --accent-color: hsl(var(--secondary-hue), 62%, 54%);
+            --accent-color-dark: hsl(var(--secondary-hue), 62%, 44%);
+            --bg-start: #ffffff;
+            --bg-end: #f7f7f9;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --text-primary: #1f2937;
+            --text-secondary: #64748b;
+            --border-color: #e5e7eb;
+            --input-border-color: #d1d5db;
+            --input-focus-ring: hsla(var(--primary-hue), 60%, 52%, 0.28);
+            --press-translate: 1px;
+            --press-scale: 0.99;
+            --hover-lift: -4px;
+            --hover-scale: 1.02;
+            --lever-ripple-duration: .32s;
+            --card-ripple-duration: .32s;
+        }
+
+        body.theme-melon {
+            --primary-hue: 35;
+            --secondary-hue: 45;
+            --primary-color: hsl(var(--primary-hue), 88%, 60%);
+            --primary-color-light: hsl(var(--primary-hue), 88%, 72%);
+            --primary-color-dark: hsl(var(--primary-hue), 88%, 50%);
+            --primary-color-translucent: hsla(var(--primary-hue), 88%, 60%, 0.12);
+            --accent-color: hsl(var(--secondary-hue), 85%, 60%);
+            --accent-color-dark: hsl(var(--secondary-hue), 85%, 50%);
+            --bg-start: #fff7e6;
+            --bg-end: #fff3e6;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --text-primary: #5a3a1e;
+            --text-secondary: #8c6f62;
+            --border-color: #f3d7b6;
+            --input-border-color: #f1cfa7;
+            --input-focus-ring: hsla(var(--primary-hue), 88%, 60%, 0.28);
+        }
+
+        body.theme-copper {
+            --primary-hue: 25;
+            --secondary-hue: 20;
+            --primary-color: #b87333;
+            --primary-color-light: #c7854a;
+            --primary-color-dark: #9e632c;
+            --primary-color-translucent: rgba(184, 115, 51, 0.12);
+            --accent-color: #d49a6a;
+            --accent-color-dark: #b88357;
+            --bg-start: #fcf7f2;
+            --bg-end: #f5ede5;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-primary: #4a3a2a;
+            --text-secondary: #7a6a58;
+            --border-color: #e6d6c7;
+            --input-border-color: #d9c6b5;
+            --input-focus-ring: rgba(184, 115, 51, 0.25);
+        }
+
+        body.theme-blue {
+            --primary-hue: 220;
+            --secondary-hue: 200;
+            --primary-color: hsl(var(--primary-hue), 70%, 56%);
+            --primary-color-light: hsl(var(--primary-hue), 70%, 68%);
+            --primary-color-dark: hsl(var(--primary-hue), 70%, 46%);
+            --primary-color-translucent: hsla(var(--primary-hue), 70%, 56%, 0.12);
+            --accent-color: hsl(var(--secondary-hue), 62%, 54%);
+            --accent-color-dark: hsl(var(--secondary-hue), 62%, 44%);
+            --bg-start: #eef6ff;
+            --bg-end: #e6f0ff;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-primary: #173b74;
+            --text-secondary: #4b6ea9;
+            --border-color: #d6e6ff;
+            --input-border-color: #c2d6f5;
+            --input-focus-ring: hsla(var(--primary-hue), 70%, 56%, 0.28);
+        }
+
+        
 
         * {
             box-sizing: border-box;
@@ -762,10 +858,24 @@
             line-height: 1;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+            border: 1px solid var(--input-border-color);
+            box-shadow: 6px 6px 12px rgba(0,0,0,0.25), -6px -6px 12px rgba(255,255,255,0.12);
+            overflow: hidden;
+            will-change: transform;
         }
+        #theme-trigger:active, #theme-trigger.pressed { transform: translateY(1px) scale(0.96); background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.10)); box-shadow: inset 6px 6px 12px rgba(0,0,0,0.3), inset -6px -6px 12px rgba(255,255,255,0.22); }
+        #theme-trigger::after { content:""; position:absolute; inset:-40%; border-radius:50%; background: radial-gradient(closest-side, var(--accent-color), transparent 70%); opacity:0; transform: scale(0.2); pointer-events:none; }
+        #theme-trigger.rippling::after { animation: theme-ripple .42s ease-out; }
+        #theme-trigger::before { content:""; position:absolute; inset:0; border-radius:50%; opacity:0; }
+        #theme-trigger.pressed { transform: translateY(1px) scale(0.97); background: linear-gradient(180deg, var(--bg-end), var(--bg-start)); box-shadow: inset 3px 3px 8px rgba(0,0,0,0.25), inset -3px -3px 8px rgba(255,255,255,0.35); }
+        #theme-trigger::after { content:""; position:absolute; inset:-50%; border-radius:50%; background: radial-gradient(closest-side, var(--accent-color), transparent 70%); opacity:0; transform: scale(0.2); pointer-events:none; }
+        #theme-trigger.rippling::after { animation: theme-ripple .42s ease-out; }
+        @keyframes theme-ripple { 0% { opacity:.35; transform: scale(0.2); } 100% { opacity:0; transform: scale(1.6); } }
 
         #theme-trigger i {
             width: 22px;
@@ -775,7 +885,9 @@
         }
 
         #theme-trigger:hover {
-            transform: scale(1.15);
+            transform: translateY(-1px) scale(1.06);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.22);
+            border-color: #9ca3af;
         }
 
         #theme-trigger:hover i {
@@ -809,21 +921,37 @@
         #theme-wrapper.wheel-is-open #theme-wheel-container {
             opacity: 1;
             pointer-events: auto;
-            width: 300px;
-            height: 300px;
-            transform: translate(-50%, 36px) scale(1);
+            width: 420px;
+            height: 170px;
+            transform: translate(-50%, 10px) scale(1);
         }
 
-        .theme-wheel {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            border-radius: 50%;
-        }
+        .online-inline { display:inline-flex; align-items:center; gap:6px; margin: 0 8px; padding: 4px 8px; border-radius: 999px; border:1px solid var(--input-border-color); color: var(--text-secondary); font-weight: 600; font-size: .9rem; background: var(--card-bg); }
+        .online-inline i { width: 16px; height:16px; color: var(--accent-color); }
+
+        .theme-wheel { display:none; }
+
+        .theme-ribbon-panel { display:none; }
+
+        .slot-panel { position:absolute; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:auto; }
+.slot-card { display:flex; align-items:center; gap:0.6rem; padding:0.6rem; border-radius:var(--radius-lg); background:rgba(255,255,255,0.9); backdrop-filter: blur(14px) saturate(170%); -webkit-backdrop-filter: blur(14px) saturate(170%); box-shadow: var(--shadow-lg); border:1px solid var(--input-border-color); transform: translateY(0) scale(1); opacity:1; transition: transform .28s var(--transition), opacity .28s var(--transition); }
+.nav-right .slot-lever { width:36px; height:36px; }
+@media (max-width: 640px) {
+    .nav-right .slot-lever { width:34px; height:34px; }
+}
+        .slot-window { width:120px; height:80px; overflow:hidden; border-radius:12px; border:1px solid var(--input-border-color); background:var(--bg-start); position:relative; }
+        .slot-reel { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; align-items:center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
+        .slot-item { height:80px; width:100%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; }
+        .slot-lever { width:44px; height:44px; border-radius:50%; position:relative; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; background: var(--card-bg); border:1px solid var(--input-border-color); }
+        .slot-lever.pressed { transform: translateY(var(--press-translate)) scale(var(--press-scale)); box-shadow: 0 0 0 3px var(--accent-color); background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(240,240,240,0.9)); }
+        .slot-lever:hover { transform: translateY(-1px) scale(1.02); filter: brightness(1.05); }
+        .slot-lever.lever-on { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: #fff; box-shadow: 0 6px 14px rgba(59,130,246,0.18); }
+        .slot-lever i { transition: transform .28s ease; }
+        .slot-lever.lever-on i { transform: rotate(90deg); }
+        .slot-lever::after { content:""; position:absolute; inset:0; border-radius:50%; box-shadow: 0 0 0 0 var(--accent-color); opacity:0; pointer-events:none; }
+        .slot-lever.rippling::after { animation: lever-ripple var(--lever-ripple-duration, .38s) ease-out; }
+        @keyframes lever-ripple { 0% { box-shadow: 0 0 0 0 var(--accent-color); opacity: .4; } 100% { box-shadow: 0 0 0 14px rgba(0,0,0,0); opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .slot-reel { transition:none; } }
 
         .theme-option {
             position: absolute;
@@ -991,8 +1119,8 @@
         .profile-modal p {
             color: var(--text-secondary);
             margin-bottom: 3rem;
-            max-width: 500px;
-            font-size: 1.1rem;
+            max-width: 700px;
+            font-size: 1.05rem;
         }
 
         .profile-container {
@@ -1091,7 +1219,7 @@
         }
 
         .profile-card:hover {
-            transform: translateY(-10px) scale(1.05) rotate(2deg);
+            transform: translateY(var(--hover-lift)) scale(var(--hover-scale)) rotate(2deg);
             border-color: var(--primary-color);
             box-shadow: var(--shadow-lg), 0 0 40px var(--input-focus-ring);
             background-color: var(--primary-color-translucent);
@@ -1113,10 +1241,16 @@
             }
         }
 
-        .profile-card:focus-visible {
-            outline: 2px solid var(--accent-color);
-            outline-offset: 4px;
-        }
+        .profile-card:focus-visible { outline: none; }
+        .profile-card:active { transform: translateY(2px) scale(0.98); box-shadow: var(--shadow-sm) inset; }
+
+        .profile-card { transition: transform .25s ease, box-shadow .25s ease, background .25s ease; position: relative; }
+.profile-card.pressed { transform: translateY(3px) scale(0.98); box-shadow: var(--shadow-sm) inset; }
+ .profile-card.pressed { transform: translateY(var(--press-translate)) scale(var(--press-scale)); box-shadow: var(--shadow-sm) inset; }
+        .profile-card::after { content:""; position:absolute; inset:0; border-radius:16px; box-shadow: 0 0 0 0 var(--accent-color); opacity:0; pointer-events:none; }
+.profile-card.rippling::after { animation: card-ripple .38s ease-out; }
+ .profile-card.rippling::after { animation: card-ripple var(--card-ripple-duration, .38s) ease-out; }
+        @keyframes card-ripple { 0% { box-shadow: 0 0 0 0 var(--accent-color); opacity: .35; } 100% { box-shadow: 0 0 0 16px rgba(0,0,0,0); opacity: 0; } }
 
         .profile-icon {
             color: var(--primary-color);
@@ -1665,7 +1799,17 @@
         body.theme-graphite .input-group textarea,
         body.theme-graphite .transport-entry input,
         body.theme-graphite .transport-entry select {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background: linear-gradient(135deg, #1f2937 0%, #334155 100%);
+            color: #ffffff;
+            border-color: #6b7280;
+        }
+
+        body.theme-night input::placeholder,
+        body.theme-night textarea::placeholder,
+        body.theme-graphite input::placeholder,
+        body.theme-graphite textarea::placeholder {
+            color: #cbd5e1;
+            opacity: 0.85;
         }
         
         body.theme-night .input-group input[type="date"]:focus,
@@ -1674,7 +1818,9 @@
         body.theme-graphite .input-group input[type="date"]:focus,
         body.theme-graphite .input-group input[type="time"]:focus,
         body.theme-graphite .input-group input[type="number"]:focus {
-            background: #1e293b;
+            background: #334155;
+            color: #ffffff;
+            border-color: #93a2b2;
         }
 
         /* Hızlı Karanlık Mod Toggle */
@@ -4972,6 +5118,44 @@ button.add-btn:active {
     background: #ffffff !important;
 }
 
+/* Karanlık temalarda zıt renkleri geri getir (yüksek kontrast) */
+body.theme-night .input-group input,
+body.theme-night .input-group select,
+body.theme-night .input-group textarea,
+body.theme-night .transport-entry input,
+body.theme-night .transport-entry select,
+body.theme-graphite .input-group input,
+body.theme-graphite .input-group select,
+body.theme-graphite .input-group textarea,
+body.theme-graphite .transport-entry input,
+body.theme-graphite .transport-entry select {
+    background: linear-gradient(135deg, #1f2937 0%, #334155 100%) !important;
+    color: #ffffff !important;
+    border-color: #6b7280 !important;
+}
+body.theme-night .input-group input[type="date"],
+body.theme-night .input-group input[type="time"],
+body.theme-night .input-group input[type="number"],
+body.theme-graphite .input-group input[type="date"],
+body.theme-graphite .input-group input[type="time"],
+body.theme-graphite .input-group input[type="number"] {
+    background: linear-gradient(135deg, #1f2937 0%, #334155 100%) !important;
+    color: #ffffff !important;
+    border-color: #93a2b2 !important;
+}
+body.theme-night .input-group input:focus,
+body.theme-night .input-group select:focus,
+body.theme-night .input-group textarea:focus,
+body.theme-graphite .input-group input:focus,
+body.theme-graphite .input-group select:focus,
+body.theme-graphite .input-group textarea:focus {
+    background: #334155 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 3px var(--input-focus-ring) !important;
+}
+body.theme-night .input-group label,
+body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight: 600 !important; }
+
 /* --- MUHTEŞEM BAŞLIK TASARIMI (Final) --- */
 
 .decorative-title {
@@ -5368,13 +5552,7 @@ button.add-btn:active {
 
 /* Başlık Altı Çizgi */
 .profile-modal h1.decorative-title::after {
-    content: '';
-    display: block;
-    width: 60px;
-    height: 6px;
-    background: #3b82f6;
-    margin: 10px auto 0 auto;
-    border-radius: 10px;
+    display: none !important;
 }
 
 /* Gereksiz yazıyı gizle */
@@ -5429,11 +5607,13 @@ button.add-btn:active {
 }
 
 /* HOVER (ÜZERİNE GELİNCE) */
-.profile-card:hover {
-    transform: translateY(-6px) scale(1.03) !important;
+ .profile-card:hover {
+    transform: translateY(var(--hover-lift)) scale(var(--hover-scale)) !important;
     box-shadow: 0 15px 30px rgba(59, 130, 246, 0.25) !important;
     background: #ffffff !important;
-}
+ }
+ .profile-card:active, .profile-card:active:hover { transform: translateY(2px) scale(0.98) !important; box-shadow: 0 6px 14px rgba(59,130,246,0.18) !important; }
+ .profile-card:focus-visible { outline: none !important; }
 
 .profile-card:hover i {
     color: #3b82f6 !important;
@@ -5688,45 +5868,20 @@ button.add-btn:active {
                         <span class="sound-state"></span>
                     </button>
 
+
+                    <span id="online-inline" class="online-inline" title="Çevrimiçi"><i data-lucide="radio"></i> <span id="online-inline-count">-</span></span>
+
                     <div id="theme-wrapper">
                         <button id="theme-trigger" class="icon-btn" title="Temayı Değiştir"><i
                                 data-lucide="palette"></i></button>
                         <div id="theme-wheel-container">
-                            <ul class="theme-wheel">
-                                <!-- DEĞİŞİKLİK: Tema butonlarına ikonlar eklendi -->
-                                <li class="theme-option" data-theme="theme-spring"><button>🌿</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-summer">
-                                    <button>🌞</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-autumn">
-                                    <button>🍂</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-winter">
-                                    <button>⛄</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-night">
-                                    <button>🌙</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-historic">
-                                    <button>📜</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-forest">
-                                    <button>🌲</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-ocean">
-                                    <button>🌊</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-sunrise">
-                                    <button>🌅</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-lavender">
-                                    <button>🦋</button>
-                                </li>
-                                <li class="theme-option" data-theme="theme-graphite">
-                                    <button>⚫</button>
-                                </li>
-                            </ul>
+                            <ul class="theme-wheel"></ul>
+                            <div class="slot-panel">
+                                <div class="slot-card">
+                                    <div class="slot-window"><ul class="slot-reel"></ul></div>
+                                    <button class="icon-btn slot-lever no-sound" title="Sonraki Tema"><i data-lucide="rotate-cw"></i></button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -6018,12 +6173,32 @@ button.add-btn:active {
         <p class="footer-legal-text">
     © 2025 — Bu program, Sinop 10. Bölge Müdürlüğü Av ve Yaban Hayatı Şube Müdürlüğünde görev yapan personel tarafından çalışma kolaylığı sağlamak amacıyla hazırlanmış olup hâlen geliştirme aşamasındadır. Resmî bir yazılım niteliği taşımamakta, personelin kendi tazminat ve harcırah işlemlerinde süreç takibini kolaylaştırmak için kullanılmaktadır. Tüm hakları saklıdır. Programda hata veya aksaklık tespit edilmesi halinde, gerekli düzenlemeler için 10. Bölge Müdürlüğünün ilgili birimiyle iletişime geçilebilir.
     <span class="last-update" id="auto-update-date" style="font-weight: 600; opacity: 0.9; margin-left: 8px;"></span>
+    <span class="data-update" id="data-update-date" style="font-weight: 600; opacity: 0.9; margin-left: 8px;"></span>
     <script>
         (function() {
             var lastMod = new Date(document.lastModified);
             var dateStr = lastMod.toLocaleDateString('tr-TR', {day: '2-digit', month: '2-digit', year: 'numeric'});
-            document.getElementById('auto-update-date').innerHTML = 
-                `<i data-lucide="history" style="width:14px; height:14px; position:relative; top:2px; margin-right:4px; opacity:0.8;"></i> Son Güncelleme: ${dateStr}`;
+            function bumpSemver(v){ var a=(v||'0.0.1').split('.').map(Number); a[2] = (a[2]||0)+1; return a.join('.'); }
+            function codeSignature(){ var nodes = document.querySelectorAll('style,script'); var s=''; nodes.forEach(function(n){ if(n.textContent) s+=n.textContent; }); var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); } return String(h>>>0); }
+            try {
+              var prevCodeDate = localStorage.getItem('last_code_update');
+              var version = localStorage.getItem('app_version') || '2.0.2';
+              function cmp(a,b){a=(a||'0.0.0').split('.').map(Number);b=(b||'0.0.0').split('.').map(Number);for(var i=0;i<3;i++){var av=a[i]||0;var bv=b[i]||0;if(av!==bv)return av-bv;}return 0;}
+              var baseline = '2.0.2';
+              if (cmp(version, baseline) < 0) { version = baseline; localStorage.setItem('app_version', version); }
+              var codeDateStr = lastMod.toISOString().slice(0,10);
+              if (prevCodeDate !== codeDateStr) { localStorage.setItem('last_code_update', codeDateStr); version = bumpSemver(version); localStorage.setItem('app_version', version); }
+              var prevSig = localStorage.getItem('code_sig');
+              var curSig = codeSignature();
+              if (prevSig !== curSig) { localStorage.setItem('code_sig', curSig); version = bumpSemver(version); localStorage.setItem('app_version', version); }
+              document.getElementById('auto-update-date').innerHTML = 
+                `<i data-lucide="history" style="width:14px; height:14px; position:relative; top:2px; margin-right:4px; opacity:0.8;"></i> Son Güncelleme: ${dateStr} • Sürüm: v${version}`;
+              var dataUpdateISO = localStorage.getItem('data_last_update');
+              if (dataUpdateISO) {
+                var dataStr = new Date(dataUpdateISO).toLocaleDateString('tr-TR', {day:'2-digit',month:'2-digit',year:'numeric'});
+                var el = document.getElementById('data-update-date'); if (el) el.innerHTML = `• Veri Güncellemesi: ${dataStr}`;
+              }
+            } catch(e) {}
             if(typeof lucide !== 'undefined') lucide.createIcons();
         })();
     </script>
@@ -6118,10 +6293,22 @@ button.add-btn:active {
             const container = document.getElementById('profile-container'); container.innerHTML = '';
             for (const key in profiles) {
                 const profile = profiles[key];
-                const cardHTML = `<div class="profile-card" onclick="selectProfile('${key}')" tabindex="0"><i data-lucide="${profile.icon}" class="profile-icon" style="width: 36px; height: 36px;"></i><h3>${profile.name}</h3></div>`;
-                container.innerHTML += cardHTML;
+                const card = document.createElement('div');
+                card.className = 'profile-card';
+                card.setAttribute('tabindex', '0');
+                card.innerHTML = `<i data-lucide="${profile.icon}" class="profile-icon" style="width: 36px; height: 36px;"></i><h3>${profile.name}</h3>`;
+                card.addEventListener('click', () => {
+                    if (typeof playSound === 'function') playSound('click');
+                    card.classList.add('rippling');
+                    setTimeout(() => card.classList.remove('rippling'), 380);
+                    selectProfile(key);
+                });
+                card.addEventListener('pointerdown', () => card.classList.add('pressed'));
+                card.addEventListener('pointerup', () => card.classList.remove('pressed'));
+                card.addEventListener('pointerleave', () => card.classList.remove('pressed'));
+                container.appendChild(card);
             }
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function selectProfile(profileKey) {
@@ -7926,6 +8113,7 @@ const styles = `
             saveTimeout = setTimeout(() => {
                 if (!currentProfile) return;
                 try {
+                    try { localStorage.setItem('data_last_update', new Date().toISOString()); } catch(e) {}
                     const centralInfo = {};
                     document.querySelectorAll('#centralInfoSection input, #centralInfoSection select, #centralInfoSection textarea').forEach(el => { centralInfo[el.id] = el.value; });
                     const travelList = [];
@@ -8052,9 +8240,18 @@ const styles = `
             const themeTrigger = document.getElementById('theme-trigger');
             const themeWheel = document.querySelector('.theme-wheel');
             const themeOptions = document.querySelectorAll('.theme-option');
+            const slotReel = document.querySelector('.slot-reel');
+            const slotLevers = document.querySelectorAll('.slot-lever');
+            const ribbon = document.querySelector('.theme-ribbon');
+            const ribbonPrev = document.querySelector('.ribbon-prev');
+            const ribbonNext = document.querySelector('.ribbon-next');
             const body = document.body;
-            const themeOrder = ["theme-spring", "theme-summer", "theme-autumn", "theme-winter", "theme-night", "theme-historic", "theme-forest", "theme-ocean", "theme-sunrise", "theme-lavender", "theme-graphite"];
+            const themeOrder = ["theme-spring", "theme-summer", "theme-autumn", "theme-winter", "theme-night", "theme-historic", "theme-forest", "theme-ocean", "theme-sunrise", "theme-lavender", "theme-graphite", "theme-classic", "theme-melon", "theme-copper", "theme-blue"];
             const currentTheme = localStorage.getItem('theme') || 'theme-autumn';
+            const themeEmoji = {
+                'theme-spring': '🌿', 'theme-summer': '🌞', 'theme-autumn': '🍂', 'theme-winter': '⛄', 'theme-night': '🌙', 'theme-historic': '📜', 'theme-forest': '🌲', 'theme-ocean': '🌊', 'theme-sunrise': '🌅', 'theme-lavender': '🦋', 'theme-graphite': '⚫', 'theme-classic': '⚪', 'theme-melon': '🍈', 'theme-copper': '🟫', 'theme-blue': '🔵'
+            };
+            let currentIndex = Math.max(0, themeOrder.indexOf(currentTheme));
             
 
             const applyTheme = (themeName) => {
@@ -8063,12 +8260,15 @@ const styles = `
                 localStorage.setItem('theme', themeName);
                 const themeIndex = themeOrder.indexOf(themeName);
                 const rotation = -themeIndex * (360 / themeOrder.length);
-                themeWheel.style.transform = `rotate(${rotation}deg)`;
+                if (themeWheel) themeWheel.style.transform = `rotate(${rotation}deg)`;
                 themeOptions.forEach(opt => {
                     opt.classList.remove('active');
                     if (opt.dataset.theme === themeName) {
                         opt.classList.add('active');
                     }
+                });
+                document.querySelectorAll('.theme-chip').forEach(ch => {
+                    ch.classList.toggle('active-chip', ch.getAttribute('data-theme') === themeName);
                 });
                 handleThemeAnimation(themeName);
                 lucide.createIcons();
@@ -8077,15 +8277,77 @@ const styles = `
 
             themeTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
+                themeTrigger.classList.add('rippling');
+                setTimeout(() => themeTrigger.classList.remove('rippling'), 380);
                 themeWrapper.classList.toggle('wheel-is-open');
                 lucide.createIcons();
+                currentIndex = (currentIndex + 1) % themeOrder.length;
+                const name = themeOrder[currentIndex];
+                applyTheme(name);
+                if (typeof playSound === 'function') playSound('success');
             });
+
+            themeTrigger.addEventListener('pointerdown', () => themeTrigger.classList.add('pressed'));
+            themeTrigger.addEventListener('pointerup', () => themeTrigger.classList.remove('pressed'));
+            themeTrigger.addEventListener('pointerleave', () => themeTrigger.classList.remove('pressed'));
 
             document.addEventListener('click', (e) => {
                 if (!themeWrapper.contains(e.target)) {
                     themeWrapper.classList.remove('wheel-is-open');
                 }
             });
+
+            // Build ribbon panel
+            if (ribbon) {
+                ribbon.innerHTML = '';
+                themeOrder.forEach(name => {
+                    const li = document.createElement('li');
+                    li.className = 'theme-chip';
+                    li.setAttribute('data-theme', name);
+                    li.textContent = themeEmoji[name] || '🎨';
+                    li.addEventListener('click', () => {
+                        if (typeof playSound === 'function') playSound('click');
+                        applyTheme(name);
+                    });
+                    ribbon.appendChild(li);
+                });
+                if (ribbonPrev) ribbonPrev.addEventListener('click', () => ribbon.scrollBy({ left: -180, behavior: 'smooth' }));
+                if (ribbonNext) ribbonNext.addEventListener('click', () => ribbon.scrollBy({ left: 180, behavior: 'smooth' }));
+                const currentChip = ribbon.querySelector(`.theme-chip[data-theme="${currentTheme}"]`);
+                if (currentChip) { currentChip.classList.add('active-chip'); currentChip.scrollIntoView({ inline: 'center', behavior: 'auto' }); }
+            }
+
+            if (slotReel) {
+                slotReel.innerHTML = '';
+                themeOrder.forEach(name => {
+                    const li = document.createElement('li');
+                    li.className = 'slot-item';
+                    li.setAttribute('data-theme', name);
+                    li.textContent = themeEmoji[name] || '🎨';
+                    slotReel.appendChild(li);
+                });
+                const itemH = 80;
+                const updateReel = () => { slotReel.style.transform = `translateY(${-currentIndex * itemH}px)`; };
+                updateReel();
+                const pull = () => {
+                    if (typeof playSound === 'function') playSound('click');
+                    slotLevers.forEach(btn => { btn.classList.add('rippling'); btn.classList.add('lever-on'); setTimeout(() => { btn.classList.remove('rippling'); btn.classList.remove('lever-on'); }, 380); });
+                    currentIndex = (currentIndex + 1) % themeOrder.length;
+                    updateReel();
+                    const name = themeOrder[currentIndex];
+                    if (typeof playSound === 'function') playSound('success');
+                    applyTheme(name);
+                };
+                if (slotLevers && slotLevers.length) {
+                    slotLevers.forEach(btn => {
+                        btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
+                        btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
+                        btn.addEventListener('pointerleave', () => btn.classList.remove('pressed'));
+                        btn.addEventListener('click', pull);
+                    });
+                }
+                slotReel.addEventListener('click', pull);
+            }
 
             themeOptions.forEach(option => {
                 option.addEventListener('click', (e) => {
@@ -8102,7 +8364,8 @@ const styles = `
         (function setupPresence(){
             const indicator = document.getElementById('online-indicator');
             const countEl = document.getElementById('online-count');
-            if(!indicator || !countEl) return;
+            const inlineEl = document.getElementById('online-inline');
+            const inlineCount = document.getElementById('online-inline-count');
             const getUrl = `/.netlify/functions/presence?action=get`;
             const incUrl = `/.netlify/functions/presence?action=inc`;
             const decUrl = `/.netlify/functions/presence?action=dec`;
@@ -8115,9 +8378,10 @@ const styles = `
                     const res = await fetch(getUrl, { cache: 'no-store' });
                     const data = await res.json();
                     const val = typeof data?.count === 'number' ? Math.max(0, data.count) : null;
-                    countEl.textContent = val !== null ? String(val) : '-';
-                    indicator.style.display = 'flex';
-                } catch(e) { countEl.textContent = '-'; indicator.style.display = 'flex'; }
+                    if (countEl) countEl.textContent = val !== null ? String(val) : '-';
+                    if (indicator) indicator.style.display = 'flex';
+                    if (inlineEl && inlineCount) { inlineCount.textContent = val !== null ? String(val) : '-'; inlineEl.style.display = 'inline-flex'; }
+                } catch(e) { if (countEl) countEl.textContent = '-'; if (indicator) indicator.style.display = 'flex'; }
             };
 
             safeUpdate(incUrl).then(refresh);
