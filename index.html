@@ -918,9 +918,10 @@
         }
 
         .icon-btn:hover {
-            background: var(--primary-color-translucent);
-            color: var(--primary-color);
-            transform: scale(1.1);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: var(--shadow-sm);
         }
 
         .nav-right .icon-btn {
@@ -954,43 +955,31 @@
         #sound-toggle-btn.sounds-on { background: var(--bg-start); color: var(--text-secondary); }
         #sound-toggle-btn.sounds-on:hover { background: var(--bg-end); }
 
-        /* Şık buton stilleri */
+        /* Üst bar butonlarını boyasız (nötr) yap */
         .profile-change-btn,
-        #sound-toggle-btn,
         #theme-trigger {
-            position: relative;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color)) !important;
-            color: white !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            background: transparent !important;
+            color: var(--text-secondary) !important;
+            box-shadow: none !important;
         }
-
         .profile-change-btn:hover,
-        #sound-toggle-btn:hover,
         #theme-trigger:hover {
-            transform: scale(1.15) translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
-            filter: brightness(1.15);
+            background: var(--card-bg) !important;
+            color: var(--text-secondary) !important;
+            transform: translateY(-1px) scale(1.02) !important;
+            box-shadow: var(--shadow-sm) !important;
         }
-
-        .profile-change-btn i,
-        #sound-toggle-btn i,
-        #theme-trigger i {
-            color: white !important;
-        }
-
-        /* Ses butonu her zaman aynı gradient */
-        #sound-toggle-btn.sounds-on,
-        #sound-toggle-btn.sounds-off {
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color)) !important;
-        }
-
-        /* Basılma animasyonu */
         .profile-change-btn:active,
-        #sound-toggle-btn:active,
         #theme-trigger:active {
-            transform: scale(0.95) !important;
+            transform: translateY(0) scale(0.98) !important;
+            box-shadow: var(--shadow-md) inset !important;
         }
+        /* Ses butonu: sadece kapalıyken boyalı, açıkken nötr */
+        #sound-toggle-btn { background: transparent; color: var(--text-secondary); }
+        #sound-toggle-btn.sounds-on { background: var(--card-bg) !important; color: var(--text-secondary) !important; }
+        #sound-toggle-btn.sounds-on:hover { background: var(--bg-end) !important; }
+        #sound-toggle-btn.sounds-off { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)) !important; color: #fff !important; }
+        #sound-toggle-btn.sounds-off i { color: #fff !important; }
 
         /* Native tooltip'i devre dışı bırak */
         input[title],
@@ -1177,7 +1166,7 @@
             position: absolute;
             inset: 0;
             border-radius: 50%;
-            box-shadow: 0 0 0 0 var(--accent-color);
+            box-shadow: 0 0 0 0 var(--input-border-color);
             opacity: 0;
             pointer-events: none;
         }
@@ -1188,8 +1177,8 @@
 
         @keyframes theme-btn-ripple {
             0% {
-                box-shadow: 0 0 0 0 var(--accent-color);
-                opacity: 0.4;
+                box-shadow: 0 0 0 0 var(--input-border-color);
+                opacity: 0.35;
             }
             100% {
                 box-shadow: 0 0 0 14px rgba(0,0,0,0);
@@ -1198,8 +1187,8 @@
         }
 
         #theme-trigger.pressed {
-            transform: scale(0.95);
-            background: var(--primary-color-translucent);
+            transform: scale(0.98);
+            background: var(--card-bg);
         }
 
         #theme-trigger i {
@@ -1210,20 +1199,20 @@
         }
 
         #theme-trigger:hover {
-            background: var(--primary-color-translucent);
-            color: var(--primary-color);
-            transform: scale(1.1);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            transform: translateY(-1px) scale(1.02);
         }
 
         #theme-trigger:hover i {
-            color: var(--primary-color);
-            transform: rotate(15deg);
+            color: var(--text-secondary);
+            transform: rotate(12deg);
         }
 
         #theme-wrapper.wheel-is-open #theme-trigger {
-            background: var(--primary-color-translucent);
-            color: var(--primary-color);
-            transform: scale(1.1);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            transform: scale(1.02);
         }
 
         #theme-wrapper.wheel-is-open #theme-trigger i {
@@ -3680,10 +3669,7 @@
                 padding: 1rem 0.75rem;
             }
             
-            .wizard-transport-skip-btn {
-                font-size: 1rem;
-                padding: 0.9rem 2rem;
-            }
+
 
             .summary-info {
                 flex-direction: column;
@@ -4886,41 +4872,7 @@
 }
 
 /* Wizard Transport Skip Button Container */
-.wizard-transport-skip-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 2rem 0 3rem 0;
-}
 
-.wizard-transport-skip-btn {
-    background: linear-gradient(135deg, var(--primary-color-translucent), rgba(255, 255, 255, 0.5));
-    border: 2px dashed var(--primary-color);
-    color: var(--primary-color);
-    font-size: 1.1rem;
-    font-weight: 600;
-    padding: 1rem 2.5rem;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.wizard-transport-skip-btn:hover {
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-    color: white;
-    border-color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-.wizard-transport-skip-btn i {
-    width: 20px;
-    height: 20px;
-}
 
 /* Wizard Transport List */
 .wizard-transport-list {
@@ -5097,21 +5049,21 @@
 
 .wizard-add-transport-btn {
     width: 100%;
-    padding: 1.1rem 1.5rem;
+    padding: 1.2rem 1.8rem;
     border: 2px dashed var(--primary-color);
-    background: linear-gradient(135deg, var(--primary-color-translucent), rgba(255, 255, 255, 0.3));
+    background: linear-gradient(135deg, var(--primary-color-translucent), rgba(255, 255, 255, 0.5));
     color: var(--primary-color);
     font-weight: 600;
-    font-size: 1rem;
-    margin-top: 1rem;
+    font-size: 1.05rem;
+    margin-top: 0.5rem;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.7rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    gap: 0.75rem;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
 }
 
 .wizard-add-transport-btn:hover {
@@ -5119,12 +5071,12 @@
     color: white;
     border-color: var(--primary-color);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
 .wizard-add-transport-btn i {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
 }
 
 /* Dark Theme Support for Transport Items */
@@ -5143,10 +5095,7 @@ body.theme-graphite .wizard-transport-item select {
     color: var(--text-primary);
 }
 
-body.theme-night .wizard-transport-skip-btn,
-body.theme-graphite .wizard-transport-skip-btn {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(30, 41, 59, 0.5));
-}
+
 
 /* Historic Theme Support */
 body.theme-historic .wizard-transport-item {
@@ -5159,9 +5108,7 @@ body.theme-historic .wizard-transport-item select {
     border-color: var(--input-border-color);
 }
 
-body.theme-historic .wizard-transport-skip-btn {
-    background: linear-gradient(135deg, rgba(140, 111, 98, 0.15), rgba(245, 235, 214, 0.5));
-}
+
 
 /* Wizard Type Toggle Buttons */
 .wizard-type-toggle {
@@ -7223,6 +7170,12 @@ const styles = `
     padding-right: 10px !important;
 }
 
+/* Sayısal değerlerin ortalı olmasını garanti eder */
+.total-row td:nth-child(2),
+.total-row td:nth-child(4) {
+    text-align: center !important;
+}
+
                 /* --- 9. İMZA BÖLÜMÜ --- */
                 .footer-table { 
                     width: 100%; 
@@ -7688,7 +7641,7 @@ const styles = `
             const monthsWithDuty = monthNames.filter(month => monthData[month].count > 0); const monthsText = monthsWithDuty.length > 0 ? monthsWithDuty.join(' ') : monthNames.join(' '); const dutyText = monthsWithDuty.length > 0 ? `${year} yılı ${monthsText} ${monthsWithDuty.length === 1 ? 'ayında' : 'aylarında'} arazide görev yapmıştır.` : `${year} yılı ${monthNames.join(' ')} ${monthNames.length === 1 ? 'ayında' : 'aylarında'} arazide görev yapmamıştır.`; return `<div class="header-info-container"><div style="text-align: left;"><div style="font-weight: bold;">${document.getElementById("department").value}</div><div>${monthNames.join(' ')}</div></div><div style="text-align: center; font-weight: bold; font-size: 14px;">ARAZİ ÇALIŞMALARINI GÖSTEREN ÇİZELGE</div><div style="text-align: right; font-weight: bold;">Bütçe Yılı: ${year}</div></div><table class="main-table"><thead><tr><th style="width: 4%;">Sıra No</th><th style="width: 12%;">Adı Soyadı</th><th style="width: 10%;">Ünvanı</th><th style="width: 8%;">Ait Olduğu Ay</th>${dayColumns}<th style="width: 5%;">Aylık Çalıştığı Gün Sayısı</th><th style="width: 5%;">Üç Aylık Dönem Çalıştığı Gün Toplamı</th><th style="width: 6%;">İmza</th></tr></thead><tbody>${monthRows}</tbody></table><p style="margin-top:20px; font-size:10px; text-align:left;">Yukarıda belirtilen teknik eleman ${dutyText}</p><div style="margin-top:40px; text-align:right; padding-right: 20px;"><div style="font-size: 11px; display: inline-block; text-align: center;"><div>Uygundur</div><div style="margin-top: 10px;">...../....../${year}</div><div style="margin-top: 25px; font-weight: bold;" contenteditable="true">${amirAdi}</div><div style="font-size: 10px; margin-top: 5px;" contenteditable="true">${amirUnvani}</div></div></div>`
         }
 
-        function generateGorevEmriReportHTML() { const duties = []; const görevYeri = document.getElementById("görevYeri").value || "Sinop"; const amirAdi = document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("amirUnvani").value; const olurYetkilisi = document.getElementById("olurYetkilisi").value; const olurUnvan = document.getElementById("olurUnvan").value; const selectedMonthOptions = Array.from(document.getElementById('yollukMonthFilter').selectedOptions); const selectedMonths = selectedMonthOptions.map(opt => parseInt(opt.value, 10)); if (selectedMonths.length === 0) { showToast("Lütfen en az bir rapor ayı seçin.", "warning"); return null } const selectAll = selectedMonths.includes(0); const rows = document.querySelectorAll(".travel-card"); rows.forEach(row => { if (row.querySelector('input[name*="gorevTipi"]:checked').value === 'seminer') return; const type = row.querySelector(".gorev-tipi-select").value; if (type === 'gunubirlik') { const dateStr = row.querySelector(".travel-date").value; if (dateStr) { const date = new Date(dateStr); if (selectAll || selectedMonths.includes(date.getMonth() + 1)) { duties.push({ date: date, route: row.querySelector(".travel-route").value, konu: row.querySelector(".travel-konu").value }) } } } else { const startDateStr = row.querySelector(".coklu-start-date").value; const endDateStr = row.querySelector(".coklu-end-date").value; if (startDateStr && endDateStr) { const startDate = new Date(startDateStr); const endDate = new Date(endDateStr); const route = row.querySelector(".travel-route").value; const konu = row.querySelector(".travel-konu").value; for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) { if (selectAll || selectedMonths.includes(d.getMonth() + 1)) { const currentDate = new Date(d); let currentRoute = route; if (startDate.getTime() !== endDate.getTime()) { if (currentDate.getTime() === startDate.getTime()) currentRoute = `${görevYeri}-${route}`; else if (currentDate.getTime() === endDate.getTime()) currentRoute = `${route}-${görevYeri}`; else currentRoute = `${route} (Mahallinde)` } duties.push({ date: currentDate, route: currentRoute, konu: konu }) } } } } }); duties.sort((a, b) => a.date - b.date); if (duties.length === 0) { showToast("Seçilen aylar için görev bulunamadı.", "warning"); return null } let dutyRows = ''; duties.slice(0, 20).forEach((duty, index) => { dutyRows += `<tr><td>${index + 1}</td><td>${duty.date.toLocaleDateString("tr-TR")}</td><td>${duty.route}</td><td>${duty.konu}</td></tr>` }); for (let i = duties.length; i < 20; i++) { dutyRows += `<tr><td>${i + 1}</td><td></td><td></td><td></td></tr>` } const monthNames = [...new Set(duties.map(d => turkceAylar[d.date.getMonth()]))].join(', '); const lastDate = duties[duties.length - 1].date; const monthYear = `${turkceAylar[lastDate.getMonth()]} ${lastDate.getFullYear()}`; return `<h3 style="text-align:center;">İL İÇİ AYLIK GÖREVLENDİRME OLUR'U</h3><table class="no-border header-table" style="width:100%;margin-bottom:10px"><tr><td style="width:60%;vertical-align:top;text-align:left"><table class="no-border" style="width:100%"><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>MÜDÜRLÜĞÜ&nbsp;&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("department").value}</td></tr><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>BİRİMİ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("birim").value}</td></tr><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>UNVANI&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("title").value}</td></tr><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>ADI SOYADI&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("fullName").value}</td></tr></table></td><td style="width:40%;vertical-align:top;text-align:right"><table class="no-border" style="width:100%;margin-left:auto"><tr><td style="width:60px;vertical-align:top;text-align:left;white-space:nowrap;"><b>DÖNEMİ&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${monthNames}</td></tr><tr><td style="width:60px;vertical-align:top;text-align:left;white-space:nowrap;"><b>AY-YIL&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${monthYear}</td></tr></table></td></tr></table><table><thead><tr><th style="width: 8%;">Sıra</th><th style="width: 15%;">Tarihi</th><th style="width: 27%;">Görev Yeri</th><th style="width: 50%;">Görevin Konusu</th></tr></thead><tbody>${dutyRows}</tbody></table><table class="no-border footer-table" style="width:100%;margin-top:20px"><tr><td style="width:60%"></td><td style="text-align:right;padding-right:20px"><div style="display:inline-block; text-align:center;"><div>.../.../${document.getElementById("budgetYear").value}</div><div style="margin-top:20px;"><b contenteditable="true">${amirAdi}</b></div><div contenteditable="true">${amirUnvani}</div></div></td></tr></table><table class="no-border footer-table" style="width:100%;margin-top:30px"><tr><td style="text-align:center"><b>OLUR</b><br>.../.../${document.getElementById("budgetYear").value}<br><br><b contenteditable="true">${olurYetkilisi}</b><br><span contenteditable="true">${olurUnvan}</span></td></tr></table>` }
+        function generateGorevEmriReportHTML() { const duties = []; const görevYeri = document.getElementById("görevYeri").value || "Sinop"; const amirAdi = document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("amirUnvani").value; const olurYetkilisi = document.getElementById("olurYetkilisi").value; const olurUnvan = document.getElementById("olurUnvan").value; const selectedMonthOptions = Array.from(document.getElementById('yollukMonthFilter').selectedOptions); const selectedMonths = selectedMonthOptions.map(opt => parseInt(opt.value, 10)); if (selectedMonths.length === 0) { showToast("Lütfen en az bir rapor ayı seçin.", "warning"); return null } const selectAll = selectedMonths.includes(0); const rows = document.querySelectorAll(".travel-card"); rows.forEach(row => { if (row.querySelector('input[name*="gorevTipi"]:checked').value === 'seminer') return; const type = row.querySelector(".gorev-tipi-select").value; if (type === 'gunubirlik') { const dateStr = row.querySelector(".travel-date").value; if (dateStr) { const date = new Date(dateStr); if (selectAll || selectedMonths.includes(date.getMonth() + 1)) { duties.push({ date: date, route: row.querySelector(".travel-route").value, konu: row.querySelector(".travel-konu").value }) } } } else { const startDateStr = row.querySelector(".coklu-start-date").value; const endDateStr = row.querySelector(".coklu-end-date").value; if (startDateStr && endDateStr) { const startDate = new Date(startDateStr); const endDate = new Date(endDateStr); const route = row.querySelector(".travel-route").value; const konu = row.querySelector(".travel-konu").value; for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) { if (selectAll || selectedMonths.includes(d.getMonth() + 1)) { const currentDate = new Date(d); let currentRoute = route; if (startDate.getTime() !== endDate.getTime()) { if (currentDate.getTime() === startDate.getTime()) currentRoute = `${görevYeri}-${route}`; else if (currentDate.getTime() === endDate.getTime()) currentRoute = `${route}-${görevYeri}`; else currentRoute = `${route} (Mahallinde)` } duties.push({ date: currentDate, route: currentRoute, konu: konu }) } } } } }); duties.sort((a, b) => a.date - b.date); if (duties.length === 0) { showToast("Seçilen aylar için görev bulunamadı.", "warning"); return null } let dutyRows = ''; duties.slice(0, 20).forEach((duty, index) => { dutyRows += `<tr><td>${index + 1}</td><td>${duty.date.toLocaleDateString("tr-TR")}</td><td style="text-align:left">${duty.route}</td><td>${duty.konu}</td></tr>` }); for (let i = duties.length; i < 20; i++) { dutyRows += `<tr><td>${i + 1}</td><td></td><td style="text-align:left"></td><td></td></tr>` } const monthNames = [...new Set(duties.map(d => turkceAylar[d.date.getMonth()]))].join(', '); const lastDate = duties[duties.length - 1].date; const monthYear = `${turkceAylar[lastDate.getMonth()]} ${lastDate.getFullYear()}`; return `<h3 style="text-align:center;">İL İÇİ AYLIK GÖREVLENDİRME OLUR'U</h3><table class="no-border header-table" style="width:100%;margin-bottom:10px"><tr><td style="width:60%;vertical-align:top;text-align:left"><table class="no-border" style="width:100%"><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>MÜDÜRLÜĞÜ&nbsp;&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("department").value}</td></tr><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>BİRİMİ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("birim").value}</td></tr><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>UNVANI&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("title").value}</td></tr><tr><td style="width:100px;vertical-align:top;text-align:left;white-space:nowrap;"><b>ADI SOYADI&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${document.getElementById("fullName").value}</td></tr></table></td><td style="width:40%;vertical-align:top;text-align:right"><table class="no-border" style="width:100%;margin-left:auto"><tr><td style="width:60px;vertical-align:top;text-align:left;white-space:nowrap;"><b>DÖNEMİ&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${monthNames}</td></tr><tr><td style="width:60px;vertical-align:top;text-align:left;white-space:nowrap;"><b>AY-YIL&nbsp;&nbsp;:</b></td><td style="vertical-align:top;text-align:left;">${monthYear}</td></tr></table></td></tr></table><table><thead><tr><th style="width: 8%;">Sıra</th><th style="width: 15%;">Tarihi</th><th style="width: 27%;">Görev Yeri</th><th style="width: 50%;">Görevin Konusu</th></tr></thead><tbody>${dutyRows}</tbody></table><table class="no-border footer-table" style="width:100%;margin-top:20px"><tr><td style="width:60%"></td><td style="text-align:right;padding-right:20px"><div style="display:inline-block; text-align:center;"><div>.../.../${document.getElementById("budgetYear").value}</div><div style="margin-top:20px;"><b contenteditable="true">${amirAdi}</b></div><div contenteditable="true">${amirUnvani}</div></div></td></tr></table><table class="no-border footer-table" style="width:100%;margin-top:30px"><tr><td style="text-align:center"><b>OLUR</b><br>.../.../${document.getElementById("budgetYear").value}<br><br><b contenteditable="true">${olurYetkilisi}</b><br><span contenteditable="true">${olurUnvan}</span></td></tr></table>` }
 
         function getValidKontrolDays(months, year) {
             const araziGunleri = new Set; document.querySelectorAll(".travel-card").forEach(row => { if (row.querySelector('input[name*="gorevTipi"]:checked')?.value !== 'normal') return; const type = row.querySelector(".gorev-tipi-select").value; const addDateToSet = date => araziGunleri.add(toYYYYMMDD(date)); if (type === 'gunubirlik') { const dateStr = row.querySelector(".travel-date").value; if (dateStr) addDateToSet(new Date(dateStr)) } else { const startDateStr = row.querySelector(".coklu-start-date").value; const endDateStr = row.querySelector(".coklu-end-date").value; if (startDateStr && endDateStr) { for (let d = new Date(startDateStr), e = new Date(endDateStr); d <= e; d.setDate(d.getDate() + 1)) { addDateToSet(new Date(d)) } } } }); const seminerGunleri = new Set; document.querySelectorAll(".travel-card").forEach(row => { if (row.querySelector('input[name*="gorevTipi"]:checked')?.value !== 'seminer') return; const type = row.querySelector(".gorev-tipi-select").value; const addDateToSet = date => seminerGunleri.add(toYYYYMMDD(date)); if (type === 'gunubirlik') { const dateStr = row.querySelector(".travel-date").value; if (dateStr) addDateToSet(new Date(dateStr)) } else { const startDateStr = row.querySelector(".coklu-start-date").value; const endDateStr = row.querySelector(".coklu-end-date").value; if (startDateStr && endDateStr) { for (let d = new Date(startDateStr), e = new Date(endDateStr); d <= e; d.setDate(d.getDate() + 1)) { addDateToSet(new Date(d)) } } } }); const excludedDatesSet = new Set; const excludedInput = document.getElementById('excludedDates').value.replace(/\s+/g, ''); if (excludedInput) { excludedInput.split(',').forEach(part => { if (part.includes('-')) { const [start, end] = part.split('-'); const [startDay, startMonth] = start.split(/[.\/]/).map(Number); const [endDay, endMonth] = end.split(/[.\/]/).map(Number); if (startDay && startMonth && endDay && endMonth) { let currentDate = new Date(year, startMonth - 1, startDay); const endDate = new Date(year, endMonth - 1, endDay); while (currentDate <= endDate) { excludedDatesSet.add(toYYYYMMDD(currentDate)); currentDate.setDate(currentDate.getDate() + 1) } } } else { const [day, month] = part.split(/[.\/]/).map(Number); if (day && month) { excludedDatesSet.add(toYYYYMMDD(new Date(year, month - 1, day))) } } }) } const officialHolidays2025 = [{ month: 1, day: 1 }, { month: 3, day: 30 }, { month: 3, day: 31 }, { month: 4, day: 1 }, { month: 4, day: 23 }, { month: 5, day: 1 }, { month: 5, day: 19 }, { month: 6, day: 6 }, { month: 6, day: 7 }, { month: 6, day: 8 }, { month: 6, day: 9 }, { month: 7, day: 15 }, { month: 8, day: 30 }, { month: 10, day: 29 }]; officialHolidays2025.forEach(h => { if (year === 2025) { excludedDatesSet.add(toYYYYMMDD(new Date(year, h.month - 1, h.day))) } });
@@ -10851,14 +10804,7 @@ function finishWizard() {
                         <i data-lucide="car"></i>
                         Taşıt Giderleri
                     </h3>
-                    <p class="wizard-step-description">Ulaşım giderlerinizi ekleyin veya atlayın</p>
-                    
-                    <div class="wizard-transport-skip-container">
-                        <button class="wizard-transport-skip-btn" onclick="finishWizard()">
-                            <i data-lucide="skip-forward"></i>
-                            Taşıt Gideri Yok, Atla
-                        </button>
-                    </div>
+                    <p class="wizard-step-description">Varsa taşıt giderlerinizi ekleyin, yoksa "TAMAMLA" butonuna basarak devam edin</p>
                     
                     <div class="wizard-transport-list" id="wizardTransportList">
                         <!-- Transport items will be added here -->
@@ -10970,12 +10916,14 @@ function finishWizard() {
             font-weight: 800;
             text-align: center;
             line-height: 1.1;
-            transform: translateY(100%); /* Başlangıçta aşağıda gizli */
+            transform: translateY(100%);
             opacity: 0;
             display: none;
             transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             z-index: 10;
             pointer-events: none;
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
         }
 
         /* Uyarı Aktif Sınıfı */
