@@ -8635,106 +8635,96 @@ const styles = `
             applyTheme(currentTheme);
         }
 
-        // ============================================================
-        // === EMQX İLE %100 GERÇEK VE GÜÇLÜ SAYAÇ (Cache Korumalı) ===
-        // ============================================================
-        (function setupFinalRealPresence() {
-            // 1. Kütüphaneyi "Zorla" Yeniden İndirt (Önbellek Sorununu Çözer)
-            const script = document.createElement('script');
-            const cacheBuster = Math.floor(Math.random() * 100000); // Rastgele sayı
-            script.src = "https://unpkg.com/mqtt/dist/mqtt.min.js?v=" + cacheBuster;
-            document.head.appendChild(script);
+        // Çevrimiçi Kullanıcı Sayacı (Netlify Functions ile)
+        (function setupPresence(){
+            const indicator = document.getElementById('online-indicator');
+            const countEl = document.getElementById('online-count');
+            
+            // Netlify Functions endpoint'leri
+            const getUrl = `/.netlify/functions/presence?action=get`;
+            const incUrl = `/.netlify/functions/presence?action=inc`;
+            const decUrl = `/.netlify/functions/presence?action=dec`;
 
-            script.onload = function() {
-                // --- GÜÇLÜ SUNUCU AYARLARI ---
-                // EMQX Public Broker (Daha hızlı ve kararlı)
-                const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
-                const topic = 'sinop_ozel_hat_v101'; // Odamız
-                const myId = 'k_' + Math.floor(Math.random() * 999999);
+            let isOnline = false;
 
-                // Bağlantı seçenekleri
-                const options = {
-                    keepalive: 30,
-                    clientId: myId,
-                    clean: true,
-                    reconnectPeriod: 1000, // Koparsa 1 saniyede geri gel
-                    connectTimeout: 30 * 1000,
-                };
-
-                const client = mqtt.connect(brokerUrl, options);
-                let activeUsers = {};
-
-                // --- BAĞLANINCA ---
-                client.on('connect', function () {
-                    // Odaya gir
-                    client.subscribe(topic);
-                    // "Ben geldim" de
-                    broadcastHere();
-                });
-
-                // --- HER 3 SANİYEDE BİR "BURADAYIM" DE ---
-                function broadcastHere() {
-                    if(client.connected) {
-                        // Sadece ID ve Şu anki zamanı yolla
-                        client.publish(topic, JSON.stringify({ i: myId, t: Date.now() }));
-                    }
+            const safeUpdate = async (url) => {
+                try { 
+                    await fetch(url, { 
+                        method: 'GET', 
+                        cache: 'no-store',
+                        headers: { 'Content-Type': 'application/json' }
+                    }); 
+                } catch(e) {
+                    console.warn('Presence update failed:', e);
                 }
-                setInterval(broadcastHere, 3000);
+            };
 
-                // --- BAŞKALARINI DUYUNCA ---
-                client.on('message', function (topic, message) {
-                    try {
-                        const data = JSON.parse(message.toString());
-                        // Gelen kişinin kimliğini listeye yaz (Zamanıyla beraber)
-                        activeUsers[data.i] = Date.now();
-                    } catch (e) {}
-                });
-
-                // --- SAYIM VE TEMİZLİK (Her Saniye) ---
-                setInterval(function() {
-                    const now = Date.now();
-                    let count = 0;
-
-                    for (let userId in activeUsers) {
-                        // 7 saniyedir sesi çıkmayanı listeden at (İnterneti gitmiş say)
-                        if (now - activeUsers[userId] > 7000) {
-                            delete activeUsers[userId];
-                        } else {
-                            count++;
-                        }
-                    }
+            const refresh = async () => {
+                try {
+                    const res = await fetch(getUrl, { 
+                        cache: 'no-store',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
                     
-                    // Kendini her zaman say (Listede yoksan bile)
-                    if(!activeUsers[myId]) count++;
+                    if (!res.ok) throw new Error('Network response was not ok');
                     
-                    // En az 1 kişi
-                    if(count < 1) count = 1;
-
-                    updateScreen(count);
-
-                }, 1000);
-
-                // --- EKRAN GÜNCELLEME ---
-                const indicator = document.getElementById('online-indicator');
-                const countEl = document.getElementById('online-count');
-                let lastCount = 0;
-
-                function updateScreen(num) {
+                    const data = await res.json();
+                    const val = typeof data?.count === 'number' ? Math.max(1, data.count) : null;
+                    
+                    // Sayıyı güncelle
                     if (countEl) {
-                        countEl.textContent = num;
-                        countEl.style.color = 'var(--accent-color)';
-                        
-                        // Sayı değişirse zıplat
-                        if (num !== lastCount && indicator) {
-                            indicator.style.transition = "transform 0.2s ease";
-                            indicator.style.transform = "scale(1.25)";
-                            setTimeout(() => indicator.style.transform = "scale(1)", 200);
-                            lastCount = num;
-                        }
+                        countEl.textContent = val !== null ? String(val) : '1';
+                        countEl.style.color = 'var(--primary-color)';
                     }
+                    
+                    // Göstergeyi göster
+                    if (indicator) {
+                        indicator.style.display = 'flex';
+                        indicator.style.opacity = '1';
+                    }
+                    
+                    console.log('✅ Çevrimiçi kullanıcı sayısı:', val);
+                    
+                } catch(e) {
+                    console.error('❌ Çevrimiçi sayaç hatası:', e);
+                    // Hata durumunda varsayılan değer göster
+                    if (countEl) countEl.textContent = '1';
                     if (indicator) indicator.style.display = 'flex';
                 }
             };
+
+            // Sayfa yüklendiğinde sayacı artır ve göster
+            const init = async () => {
+                console.log('🔄 Çevrimiçi sayaç başlatılıyor...');
+                await safeUpdate(incUrl);
+                await refresh();
+                isOnline = true;
+            };
+
+            // Sayfa kapanırken sayacı azalt
+            const cleanup = () => {
+                if (isOnline) {
+                    safeUpdate(decUrl);
+                    isOnline = false;
+                }
+            };
+
+            // Event listener'lar
+            init();
+            
+            window.addEventListener('beforeunload', cleanup);
+            window.addEventListener('pagehide', cleanup);
+            
+            document.addEventListener('visibilitychange', () => {
+                if(document.visibilityState === 'hidden') {
+                    cleanup();
+                } else {
+                    init();
+                }
+            });
+
+            // Her 15 saniyede bir güncelle
+            setInterval(refresh, 15000);
         })();
 
         function setupLogoUploads() {
