@@ -836,63 +836,60 @@
             gap: 0.25rem;
         }
 
-        .online-indicator {
-            position: fixed;
-            right: 2rem;
-            bottom: 6rem; /* Karanlık mod butonunun üstünde */
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            border: none;
-            box-shadow: var(--shadow-lg);
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-            color: white;
-            pointer-events: none;
-            transition: var(--transition);
-        }
-
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        @media (max-width: 640px) { 
-            .online-indicator { 
-                right: 1rem; 
-                bottom: 5rem;
-                width: 52px;
-                height: 52px;
-            } 
+        /* Info Tips - Seamless Ticker */
+        .info-tips-box {
+            margin-top: 2rem;
+            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: var(--radius-md);
+            position: relative;
+            overflow: hidden;
         }
         
-        .online-indicator i[data-lucide] { 
-            width: 20px; 
-            height: 20px;
-            color: white;
-            flex-shrink: 0;
+        .info-tip-content {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            overflow: hidden;
         }
-
-        .online-indicator #online-count {
-            color: white;
-            font-weight: 800;
-            font-size: 0.85rem;
-            line-height: 1;
+        
+        /* Ticker container - seamless loop */
+        .info-tip-ticker {
+            display: flex;
+            width: max-content;
+            animation: seamlessScroll 40s linear infinite;
+            gap: 0;
         }
-
-        /* Karanlık temalarda */
-        body.theme-night .online-indicator,
-        body.theme-graphite .online-indicator {
-            background: linear-gradient(135deg, var(--primary-color-light), var(--accent-color));
+        
+        .info-tips-box p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 450;
+            line-height: 1.4;
+            white-space: nowrap;
+            padding: 0;
+            opacity: 0.7;
+        }
+        
+        @keyframes seamlessScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        /* Dark themes */
+        body.theme-night .info-tips-box,
+        body.theme-graphite .info-tips-box,
+        body.theme-aurora .info-tips-box {
+            background: transparent;
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+        
+        @media (max-width: 768px) {
+            .info-tips-box { margin-top: 1.25rem; }
+            .info-tip-content { padding: 0.625rem 0; }
+            .info-tips-box p { font-size: 0.75rem; }
+            .info-tip-ticker { animation-duration: 35s; }
         }
 
         .profile-info {
@@ -6159,10 +6156,7 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                 <input type="file" id="logo-uploader" accept="image/*" style="display: none;">
             </nav>
 
-            <div class="online-indicator" id="online-indicator" title="Çevrimiçi kullanıcılar">
-                <i data-lucide="users"></i>
-                <span id="online-count">-</span>
-            </div>
+
 
             <button class="quick-dark-toggle" onclick="toggleQuickDarkMode()" title="Karanlık Mod (Ctrl+D)">
                 <i data-lucide="moon" style="width:24px;height:24px;"></i>
@@ -6175,14 +6169,14 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
 
             <!-- Interactive Layout (Tabs) -->
             <div class="tab-nav">
-                <button class="tab-btn active" data-tab="centralInfoSection"><i data-lucide="user-cog"></i> Merkezi
+                <button class="tab-btn active" data-tab="centralInfoSection"><i data-lucide="user-cog"></i> Kişisel
                     Bilgiler</button>
                 <button class="tab-btn" data-tab="travelListSection"><i data-lucide="plane-takeoff"></i> Seyahat Listesi
                     (<span id="travel-counter">0</span>)</button>
                 <button class="tab-btn" data-tab="reportSection"><i data-lucide="file-text"></i> Rapor Oluştur</button>
             </div>
 
-            <!-- Panel 1: Merkezi Bilgiler -->
+            <!-- Panel 1: Kişisel Bilgiler -->
             <div id="centralInfoSection" class="tab-panel active">
                 <div class="content-card">
                     <div class="grid-container" style="gap: 2.5rem;">
@@ -6190,7 +6184,7 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                             <h4 style="text-align: center;"><i data-lucide="user-circle"
                                     style="width:22px; height:22px;"></i>Personel ve Ödeme Bilgileri</h4>
                             <div class="input-group"><label>Adı Soyadı</label><input type="text" id="fullName"
-                                    placeholder="örn: Ad Soyad" title="Personelin tam adı ve soyadı"></div>
+                                    placeholder="örn: Necmettin ERGİN" title="Personelin tam adı ve soyadı"></div>
                             <div class="input-group"><label>Unvanı</label><input type="text" id="title"
                                     placeholder="örn: Mühendis" title="Personelin görev unvanı"><small>Profil seçim
                                     ekranından da otomatik doldurabilirsiniz.</small></div>
@@ -6221,7 +6215,7 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                             <div class="info-sub-group">
                                 <h5><i data-lucide="user-check"></i> Varsayılan Yetkili</h5>
                                 <div class="input-group"><label>Adı Soyadı</label><input type="text" id="amirAdi"
-                                        placeholder="örn: Mehmet YILDIZ" title="Varsayılan onaylayıcının adı soyadı">
+                                        placeholder="örn: Mehmet Özer TOPALOĞLU" title="Varsayılan onaylayıcının adı soyadı">
                                 </div>
                                 <div class="input-group"><label>Unvanı</label><input type="text" id="amirUnvani"
                                         placeholder="örn: Şube Müdürü" title="Varsayılan onaylayıcının unvanı"></div>
@@ -6256,6 +6250,13 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                                         type="text" id="kontrolAmirUnvani"
                                         title="Boş bırakılırsa varsayılan yetkili kullanılır"></div>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bilgilendirme Notları - Seamless Ticker -->
+                    <div class="info-tips-box" id="infoTipsBox" style="margin-top: 2rem;">
+                        <div class="info-tip-content">
+                            <div class="info-tip-ticker"><p>Sadece görev günlerinizi girin, gerisini program halleder  •  Bilgileriniz kullandığınız tarayıcıya otomatik kaydedilir  •  Raporlarınız tek tıkla PDF olarak hazır  •  Tarayıcı geçmişini siler veya temizlerseniz verilerinizi tekrar girmeniz gerekir  •  </p><p>Sadece görev günlerinizi girin, gerisini program halleder  •  Bilgileriniz kullandığınız tarayıcıya otomatik kaydedilir  •  Raporlarınız tek tıkla PDF olarak hazır  •  Tarayıcı geçmişini siler veya temizlerseniz verilerinizi tekrar girmeniz gerekir  •  </p></div>
                         </div>
                     </div>
                 </div>
@@ -6432,7 +6433,7 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
 
             <footer class="app-footer modern-footer">
     <div class="footer-content-wrapper">
-        <div class="footer-links">
+        <div class="footer-links"></div>
             <span>T.C. Tarım ve Orman Bakanlığı</span>
             <span class="separator">•</span>
             <span>Doğa Koruma ve Milli Parklar Genel Müdürlüğü</span>
@@ -8635,112 +8636,61 @@ const styles = `
             applyTheme(currentTheme);
         }
 
-        // Çevrimiçi Kullanıcı Sayacı (Netlify Blobs - Gerçek Kullanıcı Sayısı)
-        (function setupPresence(){
-            const indicator = document.getElementById('online-indicator');
-            const countEl = document.getElementById('online-count');
+        // Bilgilendirme Notları - TV Ticker (CSS animasyonu ile çalışır, JS gerekmez)
+        
+        // Kişisel bilgi kontrolü ve animasyonlu yönlendirme
+        function checkPersonalInfoAndGuide() {
+            const fullName = document.getElementById('fullName');
+            if (!fullName || fullName.value.trim()) return; // Zaten dolu ise çık
             
-            const HEARTBEAT_INTERVAL = 30000; // 30 saniye
-            const API_BASE = '/.netlify/functions/presence';
-            
-            // Benzersiz kullanıcı ID'si (tarayıcı oturumu bazlı)
-            let odaId = sessionStorage.getItem('presence_uid');
-            if (!odaId) {
-                odaId = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
-                sessionStorage.setItem('presence_uid', odaId);
+            // Kişisel Bilgiler sekmesine git
+            const personalTab = document.querySelector('.tab-btn[data-tab="centralInfoSection"]');
+            if (personalTab && !personalTab.classList.contains('active')) {
+                personalTab.click();
             }
             
-            let heartbeatTimer = null;
-            let isActive = false;
-            
-            // API çağrısı
-            const callAPI = async (action) => {
-                try {
-                    const res = await fetch(`${API_BASE}?action=${action}&uid=${odaId}`, {
-                        method: 'GET',
-                        cache: 'no-store'
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        return data;
+            // Biraz bekle sonra input'a odaklan ve vurgula
+            setTimeout(() => {
+                fullName.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                setTimeout(() => {
+                    // Parlama animasyonu
+                    fullName.style.transition = 'all 0.3s ease';
+                    fullName.style.boxShadow = '0 0 0 3px var(--primary-color), 0 0 20px var(--primary-color-translucent)';
+                    fullName.style.transform = 'scale(1.02)';
+                    fullName.focus();
+                    
+                    // 2 saniye sonra normal haline dön
+                    setTimeout(() => {
+                        fullName.style.boxShadow = '';
+                        fullName.style.transform = '';
+                    }, 2000);
+                }, 500);
+            }, 300);
+        }
+        
+        // Sayfa yüklendiğinde kontrol et (profil seçildikten sonra)
+        document.addEventListener('DOMContentLoaded', () => {
+            // Profil seçim ekranı kapandıktan sonra kontrol et
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.target.id === 'profile-selection-screen' && 
+                        mutation.target.style.display === 'none') {
+                        setTimeout(checkPersonalInfoAndGuide, 500);
+                        observer.disconnect();
                     }
-                } catch(e) {
-                    console.warn('Presence API error:', e);
-                }
-                return null;
-            };
-            
-            // Sayıyı güncelle
-            const updateDisplay = (count) => {
-                if (countEl) {
-                    countEl.textContent = String(count || 1);
-                    countEl.style.color = 'var(--primary-color)';
-                }
-                if (indicator) {
-                    indicator.style.display = 'flex';
-                    indicator.style.opacity = '1';
-                }
-            };
-            
-            // Heartbeat gönder
-            const sendHeartbeat = async () => {
-                if (!isActive) return;
-                const data = await callAPI('heartbeat');
-                if (data?.count) {
-                    updateDisplay(data.count);
-                    console.log('✅ Çevrimiçi:', data.count);
-                }
-            };
-            
-            // Başlat
-            const init = async () => {
-                if (isActive) return;
-                isActive = true;
-                console.log('🔄 Çevrimiçi sayaç başlatılıyor...');
-                
-                await sendHeartbeat();
-                heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
-            };
-            
-            // Temizle
-            const cleanup = () => {
-                if (!isActive) return;
-                isActive = false;
-                
-                if (heartbeatTimer) {
-                    clearInterval(heartbeatTimer);
-                    heartbeatTimer = null;
-                }
-                
-                // Sayfa kapanırken kullanıcıyı kaldır (sendBeacon ile güvenilir)
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon(`${API_BASE}?action=leave&uid=${odaId}`);
-                } else {
-                    callAPI('leave');
-                }
-            };
-            
-            // Başlat
-            init();
-            
-            // Sayfa kapanırken
-            window.addEventListener('beforeunload', cleanup);
-            window.addEventListener('pagehide', cleanup);
-            
-            // Görünürlük değiştiğinde
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden') {
-                    // Arka planda heartbeat yavaşlat
-                    if (heartbeatTimer) clearInterval(heartbeatTimer);
-                    heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL * 2);
-                } else {
-                    // Öne gelince hızlandır
-                    if (heartbeatTimer) clearInterval(heartbeatTimer);
-                    sendHeartbeat();
-                    heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
-                }
+                });
             });
-        })();
+            
+            const profileScreen = document.getElementById('profile-selection-screen');
+            if (profileScreen) {
+                if (profileScreen.style.display === 'none') {
+                    setTimeout(checkPersonalInfoAndGuide, 500);
+                } else {
+                    observer.observe(profileScreen, { attributes: true, attributeFilter: ['style'] });
+                }
+            }
+        });
 
         function setupLogoUploads() {
             const leftLogoDiv = document.getElementById('left-logo');
@@ -9157,6 +9107,34 @@ const styles = `
             saveData();
         }
 
+        // Bilgi kutusu kapatma fonksiyonu
+        function closeInfoTipsBox() {
+            const infoBox = document.getElementById('infoTipsBox');
+            if (infoBox) {
+                infoBox.style.opacity = '0';
+                infoBox.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    infoBox.style.display = 'none';
+                    localStorage.setItem('hideInfoTipsBox', 'true');
+                }, 300);
+            }
+        }
+        
+        // Sayfa yüklendiğinde bilgi kutusu durumunu kontrol et
+        function checkInfoTipsBoxVisibility() {
+            // Eski localStorage değerini temizle (bir kerelik güncelleme)
+            if (localStorage.getItem('infoTipsBoxReset_v2') !== 'done') {
+                localStorage.removeItem('hideInfoTipsBox');
+                localStorage.setItem('infoTipsBoxReset_v2', 'done');
+            }
+            
+            const hideInfoTipsBox = localStorage.getItem('hideInfoTipsBox');
+            const infoBox = document.getElementById('infoTipsBox');
+            if (hideInfoTipsBox === 'true' && infoBox) {
+                infoBox.style.display = 'none';
+            }
+        }
+
         // Hızlı karanlık mod
         function toggleQuickDarkMode() {
             const currentTheme = document.body.className || 'theme-autumn';
@@ -9177,6 +9155,7 @@ const styles = `
             setupTabs();
             initMonthButtons();
             initPeriodButtons();
+            checkInfoTipsBoxVisibility();
 
             // Hızlı karanlık mod butonu ekle
             const darkToggle = document.createElement('button');
