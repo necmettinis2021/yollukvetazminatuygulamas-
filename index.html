@@ -8635,96 +8635,108 @@ const styles = `
             applyTheme(currentTheme);
         }
 
-        // Çevrimiçi Kullanıcı Sayacı (Netlify Functions ile)
-        (function setupPresence(){
-            const indicator = document.getElementById('online-indicator');
-            const countEl = document.getElementById('online-count');
-            
-            // Netlify Functions endpoint'leri
-            const getUrl = `/.netlify/functions/presence?action=get`;
-            const incUrl = `/.netlify/functions/presence?action=inc`;
-            const decUrl = `/.netlify/functions/presence?action=dec`;
+        // ============================================================
+        // === ÜYELİKSİZ %100 GERÇEK VE CANLI SAYAÇ (MQTT Telsiz Sistemi) ===
+        // ============================================================
+        (function setupNoLoginRealPresence() {
+            // 1. Telsiz kütüphanesini internetten çağırıyoruz
+            const script = document.createElement('script');
+            script.src = "https://unpkg.com/mqtt/dist/mqtt.min.js";
+            document.head.appendChild(script);
 
-            let isOnline = false;
+            script.onload = function() {
+                console.log("📡 Telsiz sistemi başlatılıyor...");
 
-            const safeUpdate = async (url) => {
-                try { 
-                    await fetch(url, { 
-                        method: 'GET', 
-                        cache: 'no-store',
-                        headers: { 'Content-Type': 'application/json' }
-                    }); 
-                } catch(e) {
-                    console.warn('Presence update failed:', e);
+                // Halka açık ücretsiz bir sunucuya bağlanıyoruz (Broker)
+                // Burası bizim buluşma parkımız.
+                const client = mqtt.connect('wss://broker.emqx.io:8083/mqtt');
+                
+                // Her kullanıcıya rastgele bir kimlik kartı veriyoruz
+                const myId = 'kullanici_' + Math.random().toString(16).substr(2, 8);
+                
+                // Bizim özel odamızın adı (Burası frekansımız)
+                const topic = 'sinop_yolluk_programi_v13/odasi'; 
+                
+                // Kimin ne zaman "Ben buradayım" dediğini tutan liste
+                let activeUsers = {};
+
+                // Bağlantı kurulunca ne olsun?
+                client.on('connect', function () {
+                    console.log('✅ Sunucuya bağlanıldı!');
+                    // Odaya gir ve dinlemeye başla
+                    client.subscribe(topic);
+                    
+                    // Hemen "Ben geldim" diye bağır
+                    sendHeartbeat();
+                });
+
+                // Her 3 saniyede bir "Ben hâlâ buradayım, gitmedim" sinyali gönder
+                function sendHeartbeat() {
+                    if(client.connected) {
+                        // Mesajı json paketine koyup atıyoruz
+                        client.publish(topic, JSON.stringify({ id: myId, status: 'online' }));
+                    }
                 }
-            };
+                // Kalp atışı gibi sürekli sinyal yolla
+                setInterval(sendHeartbeat, 3000);
 
-            const refresh = async () => {
-                try {
-                    const res = await fetch(getUrl, { 
-                        cache: 'no-store',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
-                    
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    
-                    const data = await res.json();
-                    const val = typeof data?.count === 'number' ? Math.max(1, data.count) : null;
-                    
-                    // Sayıyı güncelle
-                    if (countEl) {
-                        countEl.textContent = val !== null ? String(val) : '1';
-                        countEl.style.color = 'var(--primary-color)';
+                // Telsizden mesaj gelince (Biri sinyal yolladığında)
+                client.on('message', function (topic, message) {
+                    try {
+                        const data = JSON.parse(message.toString());
+                        // Mesaj atan kişinin kimliğini ve SAATİNİ not al
+                        // Örn: "Ahmet, Saat 14:05:23'te buradaydı"
+                        activeUsers[data.id] = Date.now();
+                    } catch (e) {}
+                });
+
+                // Temizlikçi Robot (Her saniye çalışır)
+                setInterval(function() {
+                    const now = Date.now();
+                    let count = 0;
+
+                    for (let userId in activeUsers) {
+                        // Eğer bir kullanıcıdan 7 saniyedir ses çıkmıyorsa...
+                        // Demek ki sayfayı kapatmış veya interneti gitmiş.
+                        if (now - activeUsers[userId] > 7000) {
+                            delete activeUsers[userId]; // Listeden sil
+                        } else {
+                            count++; // Ses verenleri say
+                        }
                     }
                     
-                    // Göstergeyi göster
+                    // En az 1 kişi (kendimiz) varızdır
+                    if(count < 1) count = 1;
+
+                    updateScreen(count);
+                }, 1000);
+
+                // Ekranı Güncelleyen Fonksiyon
+                const indicator = document.getElementById('online-indicator');
+                const countEl = document.getElementById('online-count');
+                let lastCount = 0;
+
+                function updateScreen(num) {
+                    if (countEl) {
+                        countEl.textContent = num;
+                        // Yazı rengini temanın vurgu rengi yap
+                        countEl.style.color = 'var(--accent-color)';
+                        
+                        // Eğer sayı değiştiyse kutuyu zıplat (Dikkat çeksin)
+                        if (num !== lastCount && indicator) {
+                            indicator.style.transition = "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                            indicator.style.transform = "scale(1.3)";
+                            setTimeout(() => indicator.style.transform = "scale(1)", 300);
+                            lastCount = num;
+                        }
+                    }
+                    // Kutuyu görünür yap
                     if (indicator) {
                         indicator.style.display = 'flex';
                         indicator.style.opacity = '1';
                     }
-                    
-                    console.log('✅ Çevrimiçi kullanıcı sayısı:', val);
-                    
-                } catch(e) {
-                    console.error('❌ Çevrimiçi sayaç hatası:', e);
-                    // Hata durumunda varsayılan değer göster
-                    if (countEl) countEl.textContent = '1';
-                    if (indicator) indicator.style.display = 'flex';
                 }
             };
-
-            // Sayfa yüklendiğinde sayacı artır ve göster
-            const init = async () => {
-                console.log('🔄 Çevrimiçi sayaç başlatılıyor...');
-                await safeUpdate(incUrl);
-                await refresh();
-                isOnline = true;
-            };
-
-            // Sayfa kapanırken sayacı azalt
-            const cleanup = () => {
-                if (isOnline) {
-                    safeUpdate(decUrl);
-                    isOnline = false;
-                }
-            };
-
-            // Event listener'lar
-            init();
-            
-            window.addEventListener('beforeunload', cleanup);
-            window.addEventListener('pagehide', cleanup);
-            
-            document.addEventListener('visibilitychange', () => {
-                if(document.visibilityState === 'hidden') {
-                    cleanup();
-                } else {
-                    init();
-                }
-            });
-
-            // Her 15 saniyede bir güncelle
-            setInterval(refresh, 15000);
         })();
 
         function setupLogoUploads() {
