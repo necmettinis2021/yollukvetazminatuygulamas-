@@ -7067,7 +7067,8 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                 const reportHTML = generateYollukReportHTML();
                 if (!reportHTML) return;
 
-                const content = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-landscape"><div class="report-content">${reportHTML}</div></div></div>`;
+                // reportHTML artık kendi içinde report-sheet-wrapper'ları içeriyor (çoklu sayfa desteği)
+                const content = reportHTML;
 
 const styles = `
                 /* --- 1. GENEL AYARLAR --- */
@@ -7524,20 +7525,31 @@ const styles = `
             });
 
             const grandTotal = totalDailyAmount + totalAccommodationCost + totalTransportCost;
-            let travelRowsHtml = reportRows.join("");
             const maxRows = 15;
-            for (let i = reportRows.length; i < maxRows; i++) {
-                travelRowsHtml += `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
-            }
-
-            // HTML Çıktısı
-            return `
+            const totalPages = Math.ceil(reportRows.length / maxRows) || 1;
+            
+            let allPagesHTML = '';
+            
+            for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+                const startIdx = pageIndex * maxRows;
+                const endIdx = Math.min(startIdx + maxRows, reportRows.length);
+                const pageRows = reportRows.slice(startIdx, endIdx);
+                const isLastPage = (pageIndex === totalPages - 1);
+                
+                let travelRowsHtml = pageRows.join("");
+                for (let i = pageRows.length; i < maxRows; i++) {
+                    travelRowsHtml += `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+                }
+                
+                const pageIndicator = totalPages > 1 ? ` (Sayfa ${pageIndex + 1}/${totalPages})` : '';
+                
+                const pageHTML = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-landscape"><div class="report-content">
             <table class="main-content-table">
             <thead>
                 <tr class="header-info-row">
                     <td colspan="1" class="label-cell">Adı Soyadı</td>
                     <td colspan="1" class="value-cell left-align">${document.getElementById("fullName").value}</td>
-                    <td colspan="6" rowspan="4" class="title-cell">YURTİÇİ / GEÇİCİ GÖREV YOLLUĞU BİLDİRİMİ</td>
+                    <td colspan="6" rowspan="4" class="title-cell">YURTİÇİ / GEÇİCİ GÖREV YOLLUĞU BİLDİRİMİ${pageIndicator}</td>
                     <td colspan="4" class="value-cell" style="border-bottom: 1px solid transparent !important;"> </td> 
                 </tr>
                 <tr class="header-info-row">
@@ -7587,17 +7599,17 @@ const styles = `
             <tbody>${travelRowsHtml}</tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="6" style="text-align:right; padding-right:10px;">TOPLAM</td>
-                    <td>${totalDailyAmount.toFixed(2).replace(".", ",")}</td>
+                    <td colspan="6" style="text-align:right; padding-right:10px;">${isLastPage ? 'TOPLAM' : 'Ara Toplam'}</td>
+                    <td>${isLastPage ? totalDailyAmount.toFixed(2).replace(".", ",") : ''}</td>
                     <td></td>
-                    <td>${(totalAccommodationCost + totalTransportCost).toFixed(2).replace(".", ",")}</td>
+                    <td>${isLastPage ? (totalAccommodationCost + totalTransportCost).toFixed(2).replace(".", ",") : ''}</td>
                     <td colspan="2"></td>
-                    <td>${grandTotal.toFixed(2).replace(".", ",")}</td>
+                    <td>${isLastPage ? grandTotal.toFixed(2).replace(".", ",") : 'Devamı var...'}</td>
                 </tr>
             </tfoot>
             </table>
             
-            <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${grandTotal > 0 ? numberToWordsTR(grandTotal) : 'SIFIR'} harcamaya ait bildirimdir.</p>
+            <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${isLastPage && grandTotal > 0 ? numberToWordsTR(grandTotal) : '...................'} harcamaya ait bildirimdir.</p>
             
             <table class="footer-table signature-section" style="margin-top:10px;">
                 <tr>
@@ -7616,7 +7628,13 @@ const styles = `
                         <p>Unvanı : <span contenteditable="true">${document.getElementById("title").value}</span></p>
                     </td>
                 </tr>
-            </table>`;
+            </table>
+            </div></div></div>`;
+                
+                allPagesHTML += pageHTML;
+            }
+            
+            return allPagesHTML;
         }
 
         function generateAraziIfaHTML() {
