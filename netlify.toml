@@ -1,0 +1,14 @@
+[build]
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+
+# Netlify Blobs için gerekli
+[context.production]
+  environment = { NETLIFY_BLOBS_CONTEXT = "production" }
