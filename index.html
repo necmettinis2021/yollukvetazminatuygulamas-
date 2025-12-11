@@ -8635,96 +8635,111 @@ const styles = `
             applyTheme(currentTheme);
         }
 
-        // Çevrimiçi Kullanıcı Sayacı (Netlify Functions ile)
+        // Çevrimiçi Kullanıcı Sayacı (Netlify Blobs - Gerçek Kullanıcı Sayısı)
         (function setupPresence(){
             const indicator = document.getElementById('online-indicator');
             const countEl = document.getElementById('online-count');
             
-            // Netlify Functions endpoint'leri
-            const getUrl = `/.netlify/functions/presence?action=get`;
-            const incUrl = `/.netlify/functions/presence?action=inc`;
-            const decUrl = `/.netlify/functions/presence?action=dec`;
-
-            let isOnline = false;
-
-            const safeUpdate = async (url) => {
-                try { 
-                    await fetch(url, { 
-                        method: 'GET', 
-                        cache: 'no-store',
-                        headers: { 'Content-Type': 'application/json' }
-                    }); 
-                } catch(e) {
-                    console.warn('Presence update failed:', e);
-                }
-            };
-
-            const refresh = async () => {
+            const HEARTBEAT_INTERVAL = 10000; // 10 saniye
+            const API_BASE = '/.netlify/functions/presence';
+            
+            // Benzersiz kullanıcı ID'si (tarayıcı oturumu bazlı)
+            let odaId = sessionStorage.getItem('presence_uid');
+            if (!odaId) {
+                odaId = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 6);
+                sessionStorage.setItem('presence_uid', odaId);
+            }
+            
+            let heartbeatTimer = null;
+            let isActive = false;
+            
+            // API çağrısı
+            const callAPI = async (action) => {
                 try {
-                    const res = await fetch(getUrl, { 
-                        cache: 'no-store',
-                        headers: { 'Content-Type': 'application/json' }
+                    const res = await fetch(`${API_BASE}?action=${action}&uid=${odaId}`, {
+                        method: 'GET',
+                        cache: 'no-store'
                     });
-                    
-                    if (!res.ok) throw new Error('Network response was not ok');
-                    
-                    const data = await res.json();
-                    const val = typeof data?.count === 'number' ? Math.max(1, data.count) : null;
-                    
-                    // Sayıyı güncelle
-                    if (countEl) {
-                        countEl.textContent = val !== null ? String(val) : '1';
-                        countEl.style.color = 'var(--primary-color)';
+                    if (res.ok) {
+                        const data = await res.json();
+                        return data;
                     }
-                    
-                    // Göstergeyi göster
-                    if (indicator) {
-                        indicator.style.display = 'flex';
-                        indicator.style.opacity = '1';
-                    }
-                    
-                    console.log('✅ Çevrimiçi kullanıcı sayısı:', val);
-                    
                 } catch(e) {
-                    console.error('❌ Çevrimiçi sayaç hatası:', e);
-                    // Hata durumunda varsayılan değer göster
-                    if (countEl) countEl.textContent = '1';
-                    if (indicator) indicator.style.display = 'flex';
+                    console.warn('Presence API error:', e);
+                }
+                return null;
+            };
+            
+            // Sayıyı güncelle
+            const updateDisplay = (count) => {
+                if (countEl) {
+                    countEl.textContent = String(count || 1);
+                    countEl.style.color = 'var(--primary-color)';
+                }
+                if (indicator) {
+                    indicator.style.display = 'flex';
+                    indicator.style.opacity = '1';
                 }
             };
-
-            // Sayfa yüklendiğinde sayacı artır ve göster
+            
+            // Heartbeat gönder
+            const sendHeartbeat = async () => {
+                if (!isActive) return;
+                const data = await callAPI('heartbeat');
+                if (data?.count) {
+                    updateDisplay(data.count);
+                    console.log('✅ Çevrimiçi:', data.count);
+                }
+            };
+            
+            // Başlat
             const init = async () => {
+                if (isActive) return;
+                isActive = true;
                 console.log('🔄 Çevrimiçi sayaç başlatılıyor...');
-                await safeUpdate(incUrl);
-                await refresh();
-                isOnline = true;
+                
+                await sendHeartbeat();
+                heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
             };
-
-            // Sayfa kapanırken sayacı azalt
+            
+            // Temizle
             const cleanup = () => {
-                if (isOnline) {
-                    safeUpdate(decUrl);
-                    isOnline = false;
+                if (!isActive) return;
+                isActive = false;
+                
+                if (heartbeatTimer) {
+                    clearInterval(heartbeatTimer);
+                    heartbeatTimer = null;
+                }
+                
+                // Sayfa kapanırken kullanıcıyı kaldır (sendBeacon ile güvenilir)
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(`${API_BASE}?action=leave&uid=${odaId}`);
+                } else {
+                    callAPI('leave');
                 }
             };
-
-            // Event listener'lar
+            
+            // Başlat
             init();
             
+            // Sayfa kapanırken
             window.addEventListener('beforeunload', cleanup);
             window.addEventListener('pagehide', cleanup);
             
+            // Görünürlük değiştiğinde
             document.addEventListener('visibilitychange', () => {
-                if(document.visibilityState === 'hidden') {
-                    cleanup();
+                if (document.visibilityState === 'hidden') {
+                    // Arka planda heartbeat yavaşlat
+                    if (heartbeatTimer) clearInterval(heartbeatTimer);
+                    heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL * 2);
                 } else {
-                    init();
+                    // Öne gelince hızlandır
+                    if (heartbeatTimer) clearInterval(heartbeatTimer);
+                    sendHeartbeat();
+                    heartbeatTimer = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
                 }
             });
-
-            // Her 15 saniyede bir güncelle
-            setInterval(refresh, 15000);
         })();
 
         function setupLogoUploads() {
