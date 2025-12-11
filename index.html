@@ -8636,82 +8636,91 @@ const styles = `
         }
 
         // ============================================================
-        // === ÜYELİKSİZ %100 GERÇEK VE CANLI SAYAÇ (MQTT Telsiz Sistemi) ===
+        // === ÜYELİKSİZ %100 GERÇEK SAYAÇ (HiveMQ - Güçlendirilmiş Mod) ===
         // ============================================================
-        (function setupNoLoginRealPresence() {
-            // 1. Telsiz kütüphanesini internetten çağırıyoruz
+        (function setupRobustPresence() {
+            // Kütüphaneyi yükle
             const script = document.createElement('script');
             script.src = "https://unpkg.com/mqtt/dist/mqtt.min.js";
             document.head.appendChild(script);
 
             script.onload = function() {
-                console.log("📡 Telsiz sistemi başlatılıyor...");
+                console.log("📡 Bağlantı başlatılıyor...");
 
-                // Halka açık ücretsiz bir sunucuya bağlanıyoruz (Broker)
-                // Burası bizim buluşma parkımız.
-                const client = mqtt.connect('wss://broker.emqx.io:8083/mqtt');
+                // Halka açık, daha güvenilir sunucu (HiveMQ Public Broker)
+                // WSS (Güvenli Soket) kullanıyoruz, Port 8000 genellikle açıktır.
+                const options = {
+                    keepalive: 30,
+                    clientId: 'sinop_user_' + Math.random().toString(16).substr(2, 8),
+                    protocolId: 'MQTT',
+                    protocolVersion: 4,
+                    clean: true,
+                    reconnectPeriod: 1000,
+                    connectTimeout: 30 * 1000,
+                };
+
+                const client = mqtt.connect('wss://broker.hivemq.com:8000/mqtt', options);
+                const topic = 'sinop_dkmp_yolluk_v14/presence'; // Çok özel bir oda ismi
                 
-                // Her kullanıcıya rastgele bir kimlik kartı veriyoruz
-                const myId = 'kullanici_' + Math.random().toString(16).substr(2, 8);
-                
-                // Bizim özel odamızın adı (Burası frekansımız)
-                const topic = 'sinop_yolluk_programi_v13/odasi'; 
-                
-                // Kimin ne zaman "Ben buradayım" dediğini tutan liste
                 let activeUsers = {};
 
-                // Bağlantı kurulunca ne olsun?
                 client.on('connect', function () {
                     console.log('✅ Sunucuya bağlanıldı!');
-                    // Odaya gir ve dinlemeye başla
                     client.subscribe(topic);
-                    
-                    // Hemen "Ben geldim" diye bağır
+                    // Bağlanır bağlanmaz sinyal gönder
                     sendHeartbeat();
                 });
 
-                // Her 3 saniyede bir "Ben hâlâ buradayım, gitmedim" sinyali gönder
+                client.on('error', function (err) {
+                    console.log('Bağlantı hatası:', err);
+                    // Hata olursa (Kurum engellerse) simülasyona dönmek için buraya kod yazılabilir
+                    // Ama şimdilik sadece konsola yazsın.
+                });
+
+                // "Ben Buradayım" Sinyali (Her 4 saniyede bir)
                 function sendHeartbeat() {
                     if(client.connected) {
-                        // Mesajı json paketine koyup atıyoruz
-                        client.publish(topic, JSON.stringify({ id: myId, status: 'online' }));
+                        const payload = JSON.stringify({ 
+                            id: options.clientId, 
+                            timestamp: Date.now() 
+                        });
+                        client.publish(topic, payload);
                     }
                 }
-                // Kalp atışı gibi sürekli sinyal yolla
-                setInterval(sendHeartbeat, 3000);
+                setInterval(sendHeartbeat, 4000);
 
-                // Telsizden mesaj gelince (Biri sinyal yolladığında)
+                // Mesajları Dinle
                 client.on('message', function (topic, message) {
                     try {
                         const data = JSON.parse(message.toString());
-                        // Mesaj atan kişinin kimliğini ve SAATİNİ not al
-                        // Örn: "Ahmet, Saat 14:05:23'te buradaydı"
+                        // Gelen kişinin zaman damgasını kaydet
                         activeUsers[data.id] = Date.now();
                     } catch (e) {}
                 });
 
-                // Temizlikçi Robot (Her saniye çalışır)
+                // Temizlikçi (Her saniye kontrol et)
                 setInterval(function() {
                     const now = Date.now();
                     let count = 0;
 
                     for (let userId in activeUsers) {
-                        // Eğer bir kullanıcıdan 7 saniyedir ses çıkmıyorsa...
-                        // Demek ki sayfayı kapatmış veya interneti gitmiş.
-                        if (now - activeUsers[userId] > 7000) {
-                            delete activeUsers[userId]; // Listeden sil
+                        // 10 saniyedir ses gelmiyorsa düşmüş demektir (Toleransı artırdık)
+                        if (now - activeUsers[userId] > 10000) {
+                            delete activeUsers[userId];
                         } else {
-                            count++; // Ses verenleri say
+                            count++;
                         }
                     }
                     
-                    // En az 1 kişi (kendimiz) varızdır
-                    if(count < 1) count = 1;
+                    // Kendini her zaman say
+                    if (!activeUsers[options.clientId]) count++;
+                    // En az 1 kişi
+                    if (count < 1) count = 1;
 
                     updateScreen(count);
                 }, 1000);
 
-                // Ekranı Güncelleyen Fonksiyon
+                // Ekran Güncelleme
                 const indicator = document.getElementById('online-indicator');
                 const countEl = document.getElementById('online-count');
                 let lastCount = 0;
@@ -8719,22 +8728,16 @@ const styles = `
                 function updateScreen(num) {
                     if (countEl) {
                         countEl.textContent = num;
-                        // Yazı rengini temanın vurgu rengi yap
                         countEl.style.color = 'var(--accent-color)';
                         
-                        // Eğer sayı değiştiyse kutuyu zıplat (Dikkat çeksin)
                         if (num !== lastCount && indicator) {
-                            indicator.style.transition = "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+                            indicator.style.transition = "transform 0.3s ease";
                             indicator.style.transform = "scale(1.3)";
                             setTimeout(() => indicator.style.transform = "scale(1)", 300);
                             lastCount = num;
                         }
                     }
-                    // Kutuyu görünür yap
-                    if (indicator) {
-                        indicator.style.display = 'flex';
-                        indicator.style.opacity = '1';
-                    }
+                    if (indicator) indicator.style.display = 'flex';
                 }
             };
         })();
