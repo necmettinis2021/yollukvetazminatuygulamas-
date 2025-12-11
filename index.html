@@ -8636,91 +8636,82 @@ const styles = `
         }
 
         // ============================================================
-        // === ÜYELİKSİZ %100 GERÇEK SAYAÇ (HiveMQ - Güçlendirilmiş Mod) ===
+        // === SESSİZ VE GERÇEK KULLANICI SAYACI (Sadece Sayı) ===
         // ============================================================
-        (function setupRobustPresence() {
-            // Kütüphaneyi yükle
+        (function setupSilentRealPresence() {
+            // 1. Gerekli Kütüphaneyi Yükle
             const script = document.createElement('script');
             script.src = "https://unpkg.com/mqtt/dist/mqtt.min.js";
             document.head.appendChild(script);
 
             script.onload = function() {
-                console.log("📡 Bağlantı başlatılıyor...");
+                // --- AYARLAR ---
+                const brokerUrl = 'wss://broker.hivemq.com:8000/mqtt';
+                const topic = 'sinop_dkmp_yolluk_final_v1'; // Odamızın adı
+                const myId = 'u_' + Math.floor(Math.random() * 1000000);
 
-                // Halka açık, daha güvenilir sunucu (HiveMQ Public Broker)
-                // WSS (Güvenli Soket) kullanıyoruz, Port 8000 genellikle açıktır.
-                const options = {
-                    keepalive: 30,
-                    clientId: 'sinop_user_' + Math.random().toString(16).substr(2, 8),
-                    protocolId: 'MQTT',
-                    protocolVersion: 4,
+                // --- BAĞLANTIYI BAŞLAT ---
+                const client = mqtt.connect(brokerUrl, {
+                    keepalive: 10,
+                    clientId: myId,
                     clean: true,
-                    reconnectPeriod: 1000,
-                    connectTimeout: 30 * 1000,
-                };
+                    reconnectPeriod: 1000, // Koparsa hemen geri bağlan
+                });
 
-                const client = mqtt.connect('wss://broker.hivemq.com:8000/mqtt', options);
-                const topic = 'sinop_dkmp_yolluk_v14/presence'; // Çok özel bir oda ismi
-                
                 let activeUsers = {};
 
+                // Bağlanınca ne yapayım?
                 client.on('connect', function () {
-                    console.log('✅ Sunucuya bağlanıldı!');
+                    // Odaya gir
                     client.subscribe(topic);
-                    // Bağlanır bağlanmaz sinyal gönder
-                    sendHeartbeat();
+                    // "Ben geldim" sinyali çak
+                    sendSignal();
                 });
 
-                client.on('error', function (err) {
-                    console.log('Bağlantı hatası:', err);
-                    // Hata olursa (Kurum engellerse) simülasyona dönmek için buraya kod yazılabilir
-                    // Ama şimdilik sadece konsola yazsın.
-                });
-
-                // "Ben Buradayım" Sinyali (Her 4 saniyede bir)
-                function sendHeartbeat() {
+                // Her 2 saniyede bir "Buradayım" de
+                function sendSignal() {
                     if(client.connected) {
-                        const payload = JSON.stringify({ 
-                            id: options.clientId, 
-                            timestamp: Date.now() 
-                        });
-                        client.publish(topic, payload);
+                        // Sinyal gönder (Kimlik ve Zaman)
+                        client.publish(topic, JSON.stringify({ id: myId, time: Date.now() }));
                     }
                 }
-                setInterval(sendHeartbeat, 4000);
+                setInterval(sendSignal, 2000);
 
-                // Mesajları Dinle
+                // Başkası "Buradayım" derse ne yapayım?
                 client.on('message', function (topic, message) {
                     try {
                         const data = JSON.parse(message.toString());
-                        // Gelen kişinin zaman damgasını kaydet
+                        // O kişinin ismini ve saatini not al
                         activeUsers[data.id] = Date.now();
                     } catch (e) {}
                 });
 
-                // Temizlikçi (Her saniye kontrol et)
+                // --- SAYIM VE TEMİZLİK (Her Saniye) ---
                 setInterval(function() {
                     const now = Date.now();
                     let count = 0;
 
                     for (let userId in activeUsers) {
-                        // 10 saniyedir ses gelmiyorsa düşmüş demektir (Toleransı artırdık)
-                        if (now - activeUsers[userId] > 10000) {
+                        // 6 saniyedir ses vermeyeni listeden sil (Çıkmış say)
+                        if (now - activeUsers[userId] > 6000) {
                             delete activeUsers[userId];
                         } else {
                             count++;
                         }
                     }
                     
-                    // Kendini her zaman say
-                    if (!activeUsers[options.clientId]) count++;
-                    // En az 1 kişi
-                    if (count < 1) count = 1;
+                    // Kendini her zaman say (Eğer bağlıysan)
+                    if(client.connected && !activeUsers[myId]) count++;
+                    
+                    // En az 1 kişi (Sen) varsın
+                    if(count < 1) count = 1;
 
+                    // --- EKRANA YAZDIRMA KISMI ---
                     updateScreen(count);
+
                 }, 1000);
 
-                // Ekran Güncelleme
+                // Ekranı Güncelle
                 const indicator = document.getElementById('online-indicator');
                 const countEl = document.getElementById('online-count');
                 let lastCount = 0;
@@ -8730,14 +8721,19 @@ const styles = `
                         countEl.textContent = num;
                         countEl.style.color = 'var(--accent-color)';
                         
+                        // Sayı değiştiyse kutuyu hafifçe zıplat (Efekt)
                         if (num !== lastCount && indicator) {
-                            indicator.style.transition = "transform 0.3s ease";
-                            indicator.style.transform = "scale(1.3)";
-                            setTimeout(() => indicator.style.transform = "scale(1)", 300);
+                            indicator.style.transition = "transform 0.2s ease";
+                            indicator.style.transform = "scale(1.2)";
+                            setTimeout(() => indicator.style.transform = "scale(1)", 200);
                             lastCount = num;
                         }
                     }
-                    if (indicator) indicator.style.display = 'flex';
+                    // Kutuyu görünür yap
+                    if (indicator) {
+                        indicator.style.display = 'flex';
+                        indicator.style.opacity = '1';
+                    }
                 }
             };
         })();
