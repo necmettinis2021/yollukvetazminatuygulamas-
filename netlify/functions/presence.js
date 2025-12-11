@@ -1,7 +1,7 @@
 // Netlify Blob Storage ile Çevrimiçi Sayacı (Ekstra kayıt gerektirmez!)
 const { getStore } = require('@netlify/blobs');
 
-const TIMEOUT = 20000; // 20 saniye sonra kullanıcı offline sayılır
+const TIMEOUT = 60000; // 20 saniye sonra kullanıcı offline sayılır
 
 exports.handler = async (event, context) => {
   const headers = {
