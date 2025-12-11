@@ -8636,53 +8636,57 @@ const styles = `
         }
 
         // ============================================================
-        // === SESSİZ VE GERÇEK KULLANICI SAYACI (Sadece Sayı) ===
+        // === EMQX İLE %100 GERÇEK VE GÜÇLÜ SAYAÇ (Cache Korumalı) ===
         // ============================================================
-        (function setupSilentRealPresence() {
-            // 1. Gerekli Kütüphaneyi Yükle
+        (function setupFinalRealPresence() {
+            // 1. Kütüphaneyi "Zorla" Yeniden İndirt (Önbellek Sorununu Çözer)
             const script = document.createElement('script');
-            script.src = "https://unpkg.com/mqtt/dist/mqtt.min.js";
+            const cacheBuster = Math.floor(Math.random() * 100000); // Rastgele sayı
+            script.src = "https://unpkg.com/mqtt/dist/mqtt.min.js?v=" + cacheBuster;
             document.head.appendChild(script);
 
             script.onload = function() {
-                // --- AYARLAR ---
-                const brokerUrl = 'wss://broker.hivemq.com:8000/mqtt';
-                const topic = 'sinop_dkmp_yolluk_final_v1'; // Odamızın adı
-                const myId = 'u_' + Math.floor(Math.random() * 1000000);
+                // --- GÜÇLÜ SUNUCU AYARLARI ---
+                // EMQX Public Broker (Daha hızlı ve kararlı)
+                const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+                const topic = 'sinop_ozel_hat_v101'; // Odamız
+                const myId = 'k_' + Math.floor(Math.random() * 999999);
 
-                // --- BAĞLANTIYI BAŞLAT ---
-                const client = mqtt.connect(brokerUrl, {
-                    keepalive: 10,
+                // Bağlantı seçenekleri
+                const options = {
+                    keepalive: 30,
                     clientId: myId,
                     clean: true,
-                    reconnectPeriod: 1000, // Koparsa hemen geri bağlan
-                });
+                    reconnectPeriod: 1000, // Koparsa 1 saniyede geri gel
+                    connectTimeout: 30 * 1000,
+                };
 
+                const client = mqtt.connect(brokerUrl, options);
                 let activeUsers = {};
 
-                // Bağlanınca ne yapayım?
+                // --- BAĞLANINCA ---
                 client.on('connect', function () {
                     // Odaya gir
                     client.subscribe(topic);
-                    // "Ben geldim" sinyali çak
-                    sendSignal();
+                    // "Ben geldim" de
+                    broadcastHere();
                 });
 
-                // Her 2 saniyede bir "Buradayım" de
-                function sendSignal() {
+                // --- HER 3 SANİYEDE BİR "BURADAYIM" DE ---
+                function broadcastHere() {
                     if(client.connected) {
-                        // Sinyal gönder (Kimlik ve Zaman)
-                        client.publish(topic, JSON.stringify({ id: myId, time: Date.now() }));
+                        // Sadece ID ve Şu anki zamanı yolla
+                        client.publish(topic, JSON.stringify({ i: myId, t: Date.now() }));
                     }
                 }
-                setInterval(sendSignal, 2000);
+                setInterval(broadcastHere, 3000);
 
-                // Başkası "Buradayım" derse ne yapayım?
+                // --- BAŞKALARINI DUYUNCA ---
                 client.on('message', function (topic, message) {
                     try {
                         const data = JSON.parse(message.toString());
-                        // O kişinin ismini ve saatini not al
-                        activeUsers[data.id] = Date.now();
+                        // Gelen kişinin kimliğini listeye yaz (Zamanıyla beraber)
+                        activeUsers[data.i] = Date.now();
                     } catch (e) {}
                 });
 
@@ -8692,26 +8696,25 @@ const styles = `
                     let count = 0;
 
                     for (let userId in activeUsers) {
-                        // 6 saniyedir ses vermeyeni listeden sil (Çıkmış say)
-                        if (now - activeUsers[userId] > 6000) {
+                        // 7 saniyedir sesi çıkmayanı listeden at (İnterneti gitmiş say)
+                        if (now - activeUsers[userId] > 7000) {
                             delete activeUsers[userId];
                         } else {
                             count++;
                         }
                     }
                     
-                    // Kendini her zaman say (Eğer bağlıysan)
-                    if(client.connected && !activeUsers[myId]) count++;
+                    // Kendini her zaman say (Listede yoksan bile)
+                    if(!activeUsers[myId]) count++;
                     
-                    // En az 1 kişi (Sen) varsın
+                    // En az 1 kişi
                     if(count < 1) count = 1;
 
-                    // --- EKRANA YAZDIRMA KISMI ---
                     updateScreen(count);
 
                 }, 1000);
 
-                // Ekranı Güncelle
+                // --- EKRAN GÜNCELLEME ---
                 const indicator = document.getElementById('online-indicator');
                 const countEl = document.getElementById('online-count');
                 let lastCount = 0;
@@ -8721,19 +8724,15 @@ const styles = `
                         countEl.textContent = num;
                         countEl.style.color = 'var(--accent-color)';
                         
-                        // Sayı değiştiyse kutuyu hafifçe zıplat (Efekt)
+                        // Sayı değişirse zıplat
                         if (num !== lastCount && indicator) {
                             indicator.style.transition = "transform 0.2s ease";
-                            indicator.style.transform = "scale(1.2)";
+                            indicator.style.transform = "scale(1.25)";
                             setTimeout(() => indicator.style.transform = "scale(1)", 200);
                             lastCount = num;
                         }
                     }
-                    // Kutuyu görünür yap
-                    if (indicator) {
-                        indicator.style.display = 'flex';
-                        indicator.style.opacity = '1';
-                    }
+                    if (indicator) indicator.style.display = 'flex';
                 }
             };
         })();
