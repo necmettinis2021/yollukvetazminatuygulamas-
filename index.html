@@ -7067,7 +7067,7 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                 const reportHTML = generateYollukReportHTML();
                 if (!reportHTML) return;
 
-                // reportHTML artık kendi içinde report-sheet-wrapper'ları içeriyor (çoklu sayfa desteği)
+                // reportHTML artık kendi report-sheet-wrapper'larını içeriyor (çoklu sayfa desteği)
                 const content = reportHTML;
 
 const styles = `
@@ -7528,6 +7528,7 @@ const styles = `
             const maxRows = 15;
             const totalPages = Math.ceil(reportRows.length / maxRows) || 1;
             
+            // Her sayfa için ayrı bir çizelge oluştur
             let allPagesHTML = '';
             
             for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
@@ -7536,7 +7537,9 @@ const styles = `
                 const pageRows = reportRows.slice(startIdx, endIdx);
                 const isLastPage = (pageIndex === totalPages - 1);
                 
+                // Bu sayfanın satırlarını oluştur
                 let travelRowsHtml = pageRows.join("");
+                // Boş satırları ekle (her sayfa 15 satır olacak)
                 for (let i = pageRows.length; i < maxRows; i++) {
                     travelRowsHtml += `<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
                 }
@@ -7599,17 +7602,17 @@ const styles = `
             <tbody>${travelRowsHtml}</tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="6" style="text-align:right; padding-right:10px;">${isLastPage ? 'TOPLAM' : 'Ara Toplam'}</td>
+                    <td colspan="6" style="text-align:right; padding-right:10px;">${isLastPage ? 'TOPLAM' : 'Devamı sonraki sayfada...'}</td>
                     <td>${isLastPage ? totalDailyAmount.toFixed(2).replace(".", ",") : ''}</td>
                     <td></td>
                     <td>${isLastPage ? (totalAccommodationCost + totalTransportCost).toFixed(2).replace(".", ",") : ''}</td>
                     <td colspan="2"></td>
-                    <td>${isLastPage ? grandTotal.toFixed(2).replace(".", ",") : 'Devamı var...'}</td>
+                    <td>${isLastPage ? grandTotal.toFixed(2).replace(".", ",") : ''}</td>
                 </tr>
             </tfoot>
             </table>
-            
-            <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${isLastPage && grandTotal > 0 ? numberToWordsTR(grandTotal) : '...................'} harcamaya ait bildirimdir.</p>
+            ${isLastPage ? `
+            <p style="text-align:center;margin-top:5px;font-size:8px">Yukarıda belirtilen tarih ve saatler arasında yapmış olduğum geçici görev yolluğu ile ${grandTotal > 0 ? numberToWordsTR(grandTotal) : 'SIFIR'} harcamaya ait bildirimdir.</p>
             
             <table class="footer-table signature-section" style="margin-top:10px;">
                 <tr>
@@ -7628,7 +7631,7 @@ const styles = `
                         <p>Unvanı : <span contenteditable="true">${document.getElementById("title").value}</span></p>
                     </td>
                 </tr>
-            </table>
+            </table>` : ''}
             </div></div></div>`;
                 
                 allPagesHTML += pageHTML;
