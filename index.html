@@ -876,6 +876,31 @@
             height: 22px;
         }
 
+        /* Arazi modu ana buton görsel durumu */
+        #arazi-mode-btn.sync-on {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+        }
+
+        /* Arazi bölümüne eklenen buton düzeni */
+        .button-row { display: flex; gap: 12px; align-items: flex-start; }
+        .button-with-desc { display: flex; flex-direction: column; align-items: center; }
+        .button-with-desc .btn-desc { display: block; text-align: center; margin-top: 8px; font-size: 0.9rem; color: var(--text-secondary); max-width: 160px; }
+
+        /* Yeni Arazi ana buton + sync küçük buton */
+        .arazi-main-row { display:flex; gap:12px; align-items:center; justify-content:center; }
+        .arazi-main-btn { background-image: linear-gradient(90deg, var(--primary-color), var(--primary-color-dark)); color: #fff; padding: 16px 26px; border-radius: 12px; font-size: 1rem; display: inline-flex; align-items:center; gap:10px; box-shadow: 0 8px 20px rgba(0,0,0,0.12); border: none; }
+        .arazi-main-btn i[data-lucide] { width:20px; height:20px; }
+        .arazi-manage-btn { background: var(--bg-start); color: var(--text-secondary); padding: 10px 18px; border-radius: 8px; border: none; box-shadow: var(--shadow-sm); margin-bottom:8px; }
+        .arazi-manage-btn:hover { transform: translateY(-2px); }
+        .arazi-desc-row { text-align:center; margin-top:10px; }
+        .arazi-mode-desc { color: var(--primary-color); display:flex; align-items:center; justify-content:center; gap:0.5rem; font-size: 1rem; max-width:520px; margin:0 auto 12px; font-weight: 600; line-height: 1.45; }
+        .arazi-info { color: var(--text-secondary); display:flex; align-items:center; justify-content:center; gap:0.5rem; font-size: 0.95rem; max-width:520px; margin:0 auto; }
+        /* Manager wrapper animations */
+        #manager-wrapper { transition: opacity 220ms ease; opacity: 0; }
+        .hidden { display: none !important; }
+
         /* Ses düğmesi - daha buton gibi, şık ve temaya uyumlu */
         #sound-toggle-btn {
             padding: 0.2rem;
@@ -2527,10 +2552,11 @@
             font-size: 1.05rem;
             font-weight: 700;
             background-image: linear-gradient(90deg, var(--accent-color), var(--accent-color-dark));
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
         }
 
         .main-action-btn::after {
@@ -2540,9 +2566,9 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.25), transparent);
             transform: translateX(-100%);
-            transition: transform 0.6s;
+            transition: transform 0.6s ease;
         }
 
         .main-action-btn:hover::after {
@@ -2550,10 +2576,9 @@
         }
 
         .main-action-btn:hover {
-            transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 30px hsla(var(--secondary-hue), 80%, 60%, 0.6);
-            filter: brightness(1.15);
-            animation: buttonShake 0.5s ease-in-out;
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+            filter: brightness(1.06);
         }
 
         @keyframes buttonShake {
@@ -2946,6 +2971,240 @@
         .mini-picker-trigger span { font-weight: 700; letter-spacing: 0.1px; }
         .mini-picker-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--primary-color-translucent); color: var(--primary-color); font-size: 0.78rem; font-weight: 800; }
         .mini-picker-count:empty { display: none; }
+
+        /* Gün Yönetimi Kartları - Premium Tasarım */
+        .day-management-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .day-management-card {
+            background: linear-gradient(165deg, 
+                color-mix(in oklab, var(--card-bg) 95%, var(--primary-color)),
+                var(--card-bg));
+            border: 1px solid color-mix(in oklab, var(--primary-color) 20%, transparent);
+            border-radius: 20px;
+            padding: 1.25rem 1rem;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .day-management-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 3px;
+            border-radius: 0 0 4px 4px;
+            transition: all 0.35s ease;
+            opacity: 0.9;
+        }
+        .day-management-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, 
+                color-mix(in oklab, var(--primary-color) 8%, transparent) 0%, 
+                transparent 50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+        .day-management-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 
+                0 20px 40px -10px color-mix(in oklab, var(--primary-color) 20%, transparent),
+                0 8px 16px -4px rgba(0,0,0,0.1);
+            border-color: color-mix(in oklab, var(--primary-color) 40%, transparent);
+        }
+        .day-management-card:hover::before {
+            width: 80%;
+            height: 4px;
+        }
+        .day-management-card:hover::after {
+            opacity: 1;
+        }
+        /* Hariç Tutma Kartı */
+        .exclude-card {
+            background: linear-gradient(165deg, 
+                color-mix(in oklab, var(--card-bg) 92%, var(--accent-color)),
+                var(--card-bg));
+            border-color: color-mix(in oklab, var(--accent-color) 25%, transparent);
+        }
+        .exclude-card::before {
+            background: linear-gradient(90deg, 
+                color-mix(in oklab, var(--accent-color) 80%, var(--primary-color)), 
+                var(--accent-color));
+        }
+        .exclude-card::after {
+            background: radial-gradient(circle at center, 
+                color-mix(in oklab, var(--accent-color) 10%, transparent) 0%, 
+                transparent 50%);
+        }
+        .exclude-card:hover {
+            border-color: color-mix(in oklab, var(--accent-color) 50%, transparent);
+            box-shadow: 
+                0 20px 40px -10px color-mix(in oklab, var(--accent-color) 25%, transparent),
+                0 8px 16px -4px rgba(0,0,0,0.1);
+        }
+        .exclude-card .day-card-icon-wrapper { background: linear-gradient(135deg, var(--accent-color), color-mix(in oklab, var(--accent-color) 70%, var(--primary-color))); }
+        .exclude-card .day-card-title { color: var(--accent-color); }
+        .exclude-card .mini-picker-trigger {
+            background: linear-gradient(135deg, 
+                color-mix(in oklab, var(--accent-color) 12%, var(--card-bg)), 
+                color-mix(in oklab, var(--accent-color) 18%, var(--card-bg))) !important;
+            border-color: color-mix(in oklab, var(--accent-color) 30%, transparent) !important;
+            color: var(--accent-color) !important;
+        }
+        .exclude-card .mini-picker-trigger:hover {
+            background: linear-gradient(135deg, 
+                color-mix(in oklab, var(--accent-color) 20%, var(--card-bg)), 
+                color-mix(in oklab, var(--accent-color) 28%, var(--card-bg))) !important;
+            border-color: var(--accent-color) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 20px color-mix(in oklab, var(--accent-color) 25%, transparent) !important;
+        }
+        /* Ek Gün Kartı */
+        .extra-card {
+            background: linear-gradient(165deg, 
+                color-mix(in oklab, var(--card-bg) 92%, var(--primary-color)),
+                var(--card-bg));
+            border-color: color-mix(in oklab, var(--primary-color) 25%, transparent);
+        }
+        .extra-card::before {
+            background: linear-gradient(90deg, 
+                var(--primary-color), 
+                color-mix(in oklab, var(--primary-color) 70%, var(--accent-color)));
+        }
+        .extra-card:hover {
+            border-color: color-mix(in oklab, var(--primary-color) 50%, transparent);
+        }
+        .extra-card .day-card-icon-wrapper { background: linear-gradient(135deg, var(--primary-color), color-mix(in oklab, var(--primary-color) 70%, var(--accent-color))); }
+        .extra-card .day-card-title { color: var(--primary-color); }
+        .extra-card .mini-picker-trigger {
+            background: linear-gradient(135deg, 
+                color-mix(in oklab, var(--primary-color) 12%, var(--card-bg)), 
+                color-mix(in oklab, var(--primary-color) 18%, var(--card-bg))) !important;
+            border-color: color-mix(in oklab, var(--primary-color) 30%, transparent) !important;
+            color: var(--primary-color) !important;
+        }
+        .extra-card .mini-picker-trigger:hover {
+            background: linear-gradient(135deg, 
+                color-mix(in oklab, var(--primary-color) 20%, var(--card-bg)), 
+                color-mix(in oklab, var(--primary-color) 28%, var(--card-bg))) !important;
+            border-color: var(--primary-color) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 20px color-mix(in oklab, var(--primary-color) 25%, transparent) !important;
+        }
+        .day-card-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+        .day-card-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 
+                0 8px 20px rgba(0,0,0,0.18),
+                inset 0 1px 0 rgba(255,255,255,0.25);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .day-card-icon-wrapper::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+        .day-management-card:hover .day-card-icon-wrapper::after {
+            transform: translateX(100%);
+        }
+        .day-management-card:hover .day-card-icon-wrapper {
+            transform: scale(1.12) rotate(-5deg);
+            box-shadow: 
+                0 12px 28px rgba(0,0,0,0.22),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .day-card-icon-wrapper i {
+            width: 24px;
+            height: 24px;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
+        }
+        .day-card-title {
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.4px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .day-card-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 0.85rem;
+            padding-top: 0.7rem;
+            border-top: 1px dashed color-mix(in oklab, var(--border-color) 60%, transparent);
+            opacity: 0.9;
+        }
+        .day-card-info i {
+            width: 13px;
+            height: 13px;
+            opacity: 0.7;
+        }
+        .day-management-card .mini-picker-input-row {
+            justify-content: center;
+        }
+        .day-management-card .mini-picker-input-row input[type="text"] {
+            display: none;
+        }
+        .day-management-card .mini-picker-trigger {
+            font-size: 0.82rem;
+            padding: 0.7rem 1.2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            transition: all 0.25s ease !important;
+        }
+        .day-management-card .mini-picker-trigger span {
+            font-size: 0.82rem;
+        }
+        .day-management-card .mini-picker-count {
+            background: var(--card-bg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            font-weight: 800;
+        }
+        @media (max-width: 600px) {
+            .day-management-container {
+                grid-template-columns: 1fr;
+            }
+            .day-management-card {
+                padding: 1rem 0.8rem;
+            }
+        }
 
         .mini-month-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.32); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100001; }
         @supports not (backdrop-filter: blur(4px)) { .mini-month-overlay { background: rgba(0,0,0,0.45); } }
@@ -6211,6 +6470,8 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                         <i data-lucide="palette"></i>
                     </button>
 
+                    <!-- Arazi ⇄ Kontrol Senkronizasyon Modu (buton taşındı - Arazi bölümüne) -->
+
                     <div class="logo-placeholder" id="right-logo">
                         <i data-lucide="image" style="width: 32px; height: 32px; color: var(--accent-color);"></i>
                         <span class="logo-hint">Logo yükleyebilirsiniz</span>
@@ -6397,13 +6658,18 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                                     <option value="4">Ekim - Aralık</option>
                                 </select></div>
                             <div class="input-group">
-                                <button class="main-action-btn report-generate-btn"
-                                    style="background-image: linear-gradient(90deg, var(--primary-color), var(--primary-color-dark));"
-                                    onclick="openAraziDayManager()">
-                                    <i data-lucide="calendar-cog"></i><span>Arazi Günlerini Yönet</span>
-                                </button>
-                                <small><i data-lucide="info" style="width:14px;height:14px;"></i>Arazi tazminatından
-                                    çıkarıp kontrol tazminatına eklemek istediğiniz günleri yönetin.</small>
+                                <div class="arazi-main-row">
+                                    <button id="arazi-mode-btn" class="main-action-btn arazi-main-btn" onclick="toggleSyncAraziKontrol()">
+                                        <i data-lucide="repeat"></i><span id="arazi-mode-label">Çift Tazminat Modu: AÇIK</span>
+                                    </button>
+                                </div>
+                                <div class="input-group arazi-desc-row">
+                                    <small id="arazi-mode-desc" class="arazi-mode-desc"><i data-lucide="info" style="width:14px;height:14px;"></i> MOD AÇIK: Araziye gidilen günler hem arazi hem kontrol tazminatında yer alır.</small>
+                                    <div id="manager-wrapper" style="display: none; width: 100%;">
+                                        <button id="open-arazi-manager-btn" class="main-action-btn report-generate-btn" onclick="openAraziDayManager()"><i data-lucide="calendar-cog"></i><span>Arazi Günlerini Yönet</span></button>
+                                        <small class="arazi-info" id="arazi-manage-desc"><i data-lucide="info"></i><span>Arazi günlerini manuel olarak düzenleyin (bu seçenek mod kapalıyken kullanılır).</span></small>
+                                    </div>
+                                </div>
                             </div>
                             <div class="input-group"><button class="main-action-btn report-generate-btn"
                                     onclick="generateAraziIfaPage()"><i data-lucide="list-checks"></i><span>3 Aylık
@@ -6430,49 +6696,56 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                                     <option value="11">Kasım</option>
                                     <option value="12">Aralık</option>
                                 </select></div>
-                            <div class="input-group">
-                                <label for="excludedDates">Hariç Tutulacak Günler</label>
-                                <div class="mini-picker-input-row">
-                                  <input type="text" id="excludedDates" placeholder="Ör: 23.04, 01.05-03.05"
-                                    style="text-align: center; font-size: 0.95rem;"
-                                    title="Resmi tatil ve özel günleri girin (örn: 23.04, 01.05-07.05)">
-                                  <button type="button" class="mini-picker-trigger" onclick="openMiniPicker('excluded')" title="Takvimden seç"><i data-lucide="calendar"></i><span>Takvimden Seç</span><span class="mini-picker-count" id="excludedCount"></span><i data-lucide="chevron-right"></i></button>
+                            <!-- Gün Yönetimi: Çıkarma ve Ekleme Yan Yana -->
+                            <div class="day-management-container">
+                                <div class="day-management-card exclude-card">
+                                    <div class="day-card-header">
+                                        <div class="day-card-icon-wrapper">
+                                            <i data-lucide="calendar-minus"></i>
+                                        </div>
+                                        <span class="day-card-title">Hariç Tutulacak Günler</span>
+                                    </div>
+                                    <div class="mini-picker-input-row">
+                                        <input type="text" id="excludedDates" placeholder="Ör: 23.04, 01.05">
+                                        <button type="button" class="mini-picker-trigger" onclick="openMiniPicker('excluded')" title="Takvimden seç">
+                                            <i data-lucide="calendar"></i>
+                                            <span>Takvimden Seç</span>
+                                            <span class="mini-picker-count" id="excludedCount"></span>
+                                            <i data-lucide="chevron-right"></i>
+                                        </button>
+                                    </div>
+                                    <small class="day-card-info"><i data-lucide="info"></i>Resmî izin ve bayram tatilleri</small>
                                 </div>
-                                <small class="month-selector-info"><i data-lucide="info"></i><span>Resmî izin ve varsa dinî bayram tatilleri</span></small>
+                                <div class="day-management-card extra-card">
+                                    <div class="day-card-header">
+                                        <div class="day-card-icon-wrapper">
+                                            <i data-lucide="calendar-plus"></i>
+                                        </div>
+                                        <span class="day-card-title">Ek Tatil Mesai Günleri</span>
+                                    </div>
+                                    <div class="mini-picker-input-row">
+                                        <input type="text" id="extraHolidayDates" placeholder="Ör: 01.01, 19.05">
+                                        <button type="button" class="mini-picker-trigger" onclick="openMiniPicker('extra')" title="Takvimden seç">
+                                            <i data-lucide="calendar"></i>
+                                            <span>Takvimden Seç</span>
+                                            <span class="mini-picker-count" id="extraCount"></span>
+                                            <i data-lucide="chevron-right"></i>
+                                        </button>
+                                    </div>
+                                    <small class="day-card-info"><i data-lucide="info"></i>Hafta sonu/tatil mesaileri</small>
+                                </div>
                             </div>
                             <button class="advanced-settings-toggle"
                                 onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'block' ? 'none' : 'block'"><i
                                     data-lucide="settings-2" style="width:16px;"></i> Gelişmiş Ayarlar</button>
                             <div class="advanced-settings-panel">
-                                <h5
-                                    style="text-align: center; color: var(--primary-color); font-size: 1.1rem; margin-bottom: 1rem; font-weight: 700;">
-                                    <i data-lucide="calendar-cog"
-                                        style="width:18px; height:18px; margin-right: 6px;"></i>Gün Yönetimi ve
-                                    Özelleştirme
-                                </h5>
-                                <div class="input-group">
-                                    <label for="extraHolidayDates" style="margin-bottom: 0.25rem;">Ek Tatil Mesai
-                                        Günleri</label>
-                                    <small class="month-selector-info" style="margin-bottom: 0.5rem;"><i data-lucide="info"></i><span>Tatilde çalışmışsanız tazminat alabilmek için lütfen belirtin</span></small>
-                                    <div class="mini-picker-input-row">
-                                      <input type="text" id="extraHolidayDates" placeholder="Ör: 01.01, 23.04, 19.05"
-                                          style="text-align: center; font-size: 0.95rem; padding: 0.4rem;"
-                                          title="Resmi tatil veya hafta sonunda çalışılan günleri girin">
-                                      <button type="button" class="mini-picker-trigger" onclick="openMiniPicker('extra')" title="Takvimden seç"><i data-lucide="calendar"></i><span>Takvimden Seç</span><span class="mini-picker-count" id="extraCount"></span><i data-lucide="chevron-right"></i></button>
-                                    </div>
-                                    <small class="month-selector-info" style="margin-top: 0.5rem;">
-                                        <i data-lucide="info" style="width:14px;height:14px;"></i>
-                                        Resmi tatil veya hafta sonunda yapılan mesai günlerini ekleyebilirsiniz
-                                    </small>
-                                </div>
-                                <hr
-                                    style="border: none; border-top: 1px solid var(--border-color); margin: 1.25rem 0; opacity: 0.3;">
                                 <div class="input-group">
                                     <label for="maxControlDays">Aylık Maksimum Kontrol Günü</label>
-                                    <input type="number" id="maxControlDays" min="0" max="31" value="16"
-                                        title="Her ay için maksimum kaç gün kontrol yapılacağını belirtin (0 = sınırsız)">
+                                    <input type="number" id="maxControlDays" min="0" max="31" value="31"
+                                        title="Her ay için maksimum kaç gün kontrol yapılacağını belirtin"
+                                        oninput="saveMaxControlDays()">
                                     <small style="display: block; text-align: center; margin-top: 0.5rem;"><i
-                                            data-lucide="info"></i>0 veya boş ise sınırlama olmaz.</small>
+                                            data-lucide="info"></i>Kurumunuz bir sınır belirlediyse buraya giriniz. Sınır yoksa 0 veya boş bırakın.</small>
                                 </div>
                                 <hr
                                     style="border: none; border-top: 2px solid var(--border-color); margin: 2rem 0; opacity: 0.5;">
@@ -6607,6 +6880,9 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
         let currentProfile = null;
         let calculationMode = 'MEVZUAT';
         let araziDaysMovedToKontrol = new Set();
+        // Yeni MOD: Arazi günlerini aynı anda hem Arazi Tazminatında hem Kontrol Tazminatında göstermek için kontrol değişkeni
+        // Varsayılan: ilk kullanımda AÇIK (yeni kullanıcılar için açık görünür). Kaydedilmiş tercih varsa o tercih korunur.
+        let syncAraziToKontrolModEnabled = true;
         const turkceGunler = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
         const turkceAylar = ["OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"];
         const popularLocations = ["Bartın", "Karabük", "Kastamonu", "Sinop", "Zonguldak", "Antalya", "Ankara", "Hamsilos", "Sarıkum", "Ayancık", "Gerze", "Türkeli", "Abana", "Cide", "Amasra", "İnebolu", "Düzce", "Bolu", "İstanbul", "Samsun", "Ordu", "Giresun", "Trabzon"];
@@ -6712,6 +6988,8 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
             document.getElementById('profile-info').innerHTML = `<strong>${profiles[currentProfile].name}</strong>`;
 
             loadData();
+            // selectProfile sonunda buton görünürlüğünü güncelle
+            setTimeout(() => { try { updateSyncToggleUI(); } catch(e) {} }, 100);
         }
 
         function changeProfile() {
@@ -6730,6 +7008,9 @@ body.theme-graphite .input-group label { color: #e5e7eb !important; font-weight:
                     if (val && !val.startsWith('data:image')) localStorage.removeItem(key);
                 });
             } catch(e) { }
+            
+            // maxControlDays değerini localStorage'dan yükle
+            loadMaxControlDays();
             
             const savedLocations = JSON.parse(decodeData(localStorage.getItem('autocomplete_locations') || '[]'));
             const savedTopics = JSON.parse(decodeData(localStorage.getItem('autocomplete_topics') || '[]'));
@@ -7353,14 +7634,58 @@ const styles = `
         }
         function generateGorevEmriReportPage() { const openCard = document.querySelector('.travel-card:not(.is-collapsed)'); if (openCard) { showToast("Rapor oluşturmadan önce açık seyahat kartını kapatın.", "warning"); requestCloseTravelCard(openCard); return } if (!validateRequiredCentralFields()) return; try { const reportHTML = generateGorevEmriReportHTML(); if (!reportHTML) return; const content = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-portrait"><div class="report-content">${reportHTML}</div></div></div>`; const styles = `.report-sheet{font-size:12px;line-height:1.4}h3{text-align:center;margin:0 0 20px 0;font-size:16px;font-weight:700}table{width:100%;border-collapse:collapse;table-layout:auto;margin-bottom:15px;font-size:10px}tr{height:30px}th,td{border:1px solid #000;padding:4px 5px;vertical-align:middle;white-space:normal;font-size:9px}th{font-weight:700;text-align:center;background-color:#f5f5f5;font-size:8px}td{text-align:center;font-size:9px}td:last-child{text-align:left}.no-border td{border:none!important;padding:2px 4px}.header-table{margin-bottom:20px;font-size:12px}.footer-table{margin-top:25px;font-size:11px}`; openReportInNewPage("İl İçi Aylık Görevlendirme Olur'u", content, styles, 'portrait'); showToast("Görev emri raporu oluşturuldu", "success") } catch (error) { showToast("Rapor oluşturulurken bir hata oluştu: " + error.message, "error") } }
         function generateAraziIfaPage() { const openCard = document.querySelector('.travel-card:not(.is-collapsed)'); if (openCard) { showToast("Rapor oluşturmadan önce açık seyahat kartını kapatın.", "warning"); requestCloseTravelCard(openCard); return } if (!validateRequiredCentralFields()) return; try { const reportHTML = generateAraziIfaHTML(); if (!reportHTML) return; const content = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-portrait"><div class="report-content">${reportHTML}</div></div></div>`; const styles = `.report-sheet{font-size:10px;line-height:1.2}h3{text-align:center;margin:0 0 15px 0;font-size:14px;font-weight:700}table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed;margin-bottom:10px}tr{height:22px}th,td{border:1px solid #000;padding:2px 3px;text-align:left;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px}th{font-weight:700;font-size:8px}.center{text-align:center}.no-border,.no-border td{border:none;padding:1px 2px}.header-info{margin-bottom:15px;table-layout:auto;font-size:10px}.header-info td{padding:2px 4px}.main-table th{text-align:center}`; openReportInNewPage("3 Aylık Özel Hizmet Tazminatı İfa Çetveli", content, styles, 'portrait'); showToast("Arazi ifa çetveli oluşturuldu", "success") } catch (error) { showToast("Rapor oluşturulurken bir hata oluştu: " + error.message, "error") } }
-        function generateAraziPuantajPage() { const openCard = document.querySelector('.travel-card:not(.is-collapsed)'); if (openCard) { showToast("Rapor oluşturmadan önce açık seyahat kartını kapatın.", "warning"); requestCloseTravelCard(openCard); return } if (!validateRequiredCentralFields()) return; try { const reportHTML = generateAraziPuantajHTML(); if (!reportHTML) return; const content = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-landscape"><div class="report-content">${reportHTML}</div></div></div>`; const styles = `.report-sheet{font-size:10px;line-height:1.3}table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px;table-layout:fixed}tr{height:26px}th,td{border:1px solid #000;padding:3px 2px;text-align:center;vertical-align:middle;font-size:10px}th{font-weight:700;font-size:9px}.day-cell{width:1.8%}.no-border,.no-border td{border:none;padding:2px 4px}.header-info-container{display:flex;justify-content:space-between;font-size:12px;margin-bottom:15px}`; openReportInNewPage("3 Aylık Arazi Tazminatı Puantaj Cetveli", content, styles, 'landscape'); showToast("Arazi puantaj cetveli oluşturuldu", "success") } catch (error) { showToast("Rapor oluşturulurken bir hata oluştu: " + error.message, "error") } }
+        function generateAraziPuantajPage() { const openCard = document.querySelector('.travel-card:not(.is-collapsed)'); if (openCard) { showToast("Rapor oluşturmadan önce açık seyahat kartını kapatın.", "warning"); requestCloseTravelCard(openCard); return } if (!validateRequiredCentralFields()) return; try { const reportHTML = generateAraziPuantajHTML(); if (!reportHTML) return; const content = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-landscape"><div class="report-content">${reportHTML}</div></div></div>`; const styles = `.report-sheet{font-size:10px;line-height:1.3}table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px;table-layout:fixed}tr{height:20px}th,td{border:1px solid #000;padding:2px 2px;text-align:center;vertical-align:middle;font-size:10px}th{font-weight:700;font-size:9px}.day-cell{width:1.8%}.no-border,.no-border td{border:none;padding:2px 4px}.header-info-container{display:flex;justify-content:space-between;font-size:12px;margin-bottom:15px}`; openReportInNewPage("3 Aylık Arazi Tazminatı Puantaj Cetveli", content, styles, 'landscape'); showToast("Arazi puantaj cetveli oluşturuldu", "success") } catch (error) { showToast("Rapor oluşturulurken bir hata oluştu: " + error.message, "error") } }
         function generateKontrolPuantajPage() { const openCard = document.querySelector('.travel-card:not(.is-collapsed)'); if (openCard) { showToast("Rapor oluşturmadan önce açık seyahat kartını kapatın.", "warning"); requestCloseTravelCard(openCard); return } if (!validateRequiredCentralFields()) return; try { const html = generateKontrolPuantajHTML(); if (!html) return; const styles = `.report-sheet{font-size:11px;line-height:1.3}h3,h4{text-align:center;margin:0;font-weight:700}h3{font-size:14px;margin-bottom:2px}h4{font-size:11px;font-weight:400;margin-bottom:20px}.main-table{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}.main-table tr{height:25px}.main-table th,.main-table td{border:1px solid #000;padding:2px;vertical-align:middle;text-align:center;word-wrap:break-word}.main-table th{font-weight:700;font-size:9px}.main-table .aciklama-cell{text-align:left;font-size:8px;line-height:1.2}.imza-table{margin-top:25px;font-size:11px;width:100%;border-collapse:collapse}.imza-table td{border:none;text-align:center;vertical-align:bottom}`; openReportInNewPage("Kontrol Hizmetlerine İlişkin Puantaj Tablosu", html, styles, 'portrait'); showToast("Kontrol puantaj tablosu oluşturuldu", "success") } catch (error) { showToast("Rapor oluşturulurken bir hata oluştu: " + error.message, "error"); console.error("Kontrol puantaj tablosu oluşturulurken hata:", error) } }
         function generateKontrolCizelgePage() { const openCard = document.querySelector('.travel-card:not(.is-collapsed)'); if (openCard) { showToast("Rapor oluşturmadan önce açık seyahat kartını kapatın.", "warning"); requestCloseTravelCard(openCard); return } if (!validateRequiredCentralFields()) return; try { const reportHTML = generateKontrolCizelgeHTML(); if (!reportHTML) return; const content = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-landscape"><div class="report-content">${reportHTML}</div></div></div>`; const styles = `.report-sheet{font-size:10px;line-height:1.3}h3{font-size:14px;text-align:center;font-weight:700;margin-bottom:20px}.main-table{width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed}.main-table th,.main-table td{border:1px solid #000;padding:4px 2px;text-align:center;vertical-align:middle}.main-table th{font-weight:700;font-size:9px}.day-cell{width:2%}.info-table{margin-bottom:20px;font-size:11px;width:100%}.info-table td{border:none;padding:2px}.imza-table{margin-top:40px;font-size:11px;width:100%}.imza-table td{border:none;text-align:right}`; openReportInNewPage("İlave Kontrol Hizmetleri Çalışma Günleri Çizelgesi", content, styles, 'landscape'); showToast("Kontrol çizelgesi oluşturuldu", "success") } catch (error) { showToast("Rapor oluşturulurken bir hata oluştu: " + error.message, "error"); console.error("Kontrol çizelgesi oluşturulurken hata:", error) } }
 
-        function generateKontrolPuantajHTML() { const selectedMonths = Array.from(document.getElementById('kontrolMonthFilter').selectedOptions).map(opt => parseInt(opt.value)); const year = parseInt(document.getElementById('budgetYear').value); const maxControlDays = parseInt(document.getElementById('maxControlDays').value) || 0; if (selectedMonths.length === 0) { showToast("Lütfen en az bir rapor ayı seçin.", "warning"); return null } const validControlDays = getValidKontrolDays(selectedMonths, year); const kontrolTuru = document.getElementById("kontrolTuru").value || "Belge Kontrolü"; const kontrolMevzuat = document.getElementById("kontrolMevzuat").value || "4915"; const kontrolBaslangic = document.getElementById("kontrolBaslangic").value || "09:00"; const kontrolBitis = document.getElementById("kontrolBitis").value || "16:00"; const kontrolAciklama = document.getElementById("kontrolAciklama").value || ""; const amirAdi = document.getElementById("kontrolAmirAdi").value || document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("kontrolAmirUnvani").value || document.getElementById("amirUnvani").value; let allPagesHTML = ''; selectedMonths.forEach(month => { let daysForMonth = validControlDays.filter(d => d.getMonth() + 1 === month); if (maxControlDays > 0 && daysForMonth.length > maxControlDays) { daysForMonth = daysForMonth.slice(0, maxControlDays); showToast(`${turkceAylar[month - 1]} ayı için ${maxControlDays} gün sınırı uygulandı.`, "info") } if (daysForMonth.length === 0) return; let dutyRows = ''; daysForMonth.forEach(day => { dutyRows += `<tr><td contenteditable="true">${day.toLocaleDateString('tr-TR')}</td><td contenteditable="true">${kontrolTuru}</td><td contenteditable="true">${kontrolMevzuat}</td><td class="aciklama-cell" contenteditable="true">${kontrolAciklama}</td><td contenteditable="true">${kontrolBaslangic}</td><td contenteditable="true">${kontrolBitis}</td></tr>` }); const totalRows = 18; for (let i = daysForMonth.length; i < totalRows; i++) { dutyRows += `<tr><td style="height: 25px;">&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>` } const pageHTML = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-portrait"><div class="report-content"><h3>KONTROL HİZMETLERİNE İLİŞKİN PUANTAJ TABLOSU (EK-1)</h3><h4>(Değişik:1/2/2024 tarihli ve 12843329 sayılı Olur/6.md)</h4><table class="no-border" style="width: 100%; font-size: 11px; margin-bottom: 15px;"><tr><td style="text-align: right;"><b>Ait Olduğu Yıl:</b> ${year} &nbsp;&nbsp; <b>Ay:</b> ${turkceAylar[month - 1]}</td></tr></table><table class="main-table"><thead><tr><th rowspan="2" style="width:12%">Tarih</th><th rowspan="2" style="width:15%">Kontrol Türü (1)</th><th rowspan="2" style="width:10%">Kontrol Türünün Dayandığı Mevzuat (2)</th><th rowspan="2" style="width:45%">Açıklama</th><th colspan="2" style="width:18%">Saat Aralığı</th></tr><tr><th style="width:9%">Başlangıç</th><th style="width:9%">Bitiş</th></tr></thead><tbody>${dutyRows}</tbody></table><table class="imza-table"><tr><td style="width: 50%;">&nbsp;</td><td style="width: 50%; text-align: right; padding-right: 20px;"><div style="display: inline-block; text-align: center;">Kontrol Görevini Yürüten Personel<br>...../...../${year}<br><br><b contenteditable="true">${document.getElementById("fullName").value}</b><br><span contenteditable="true">${document.getElementById("title").value}</span></div></td></tr><tr><td colspan="2" style="text-align: center; padding-top: 30px;">...../...../${year}<br><br><b contenteditable="true">${amirAdi}</b><br><span contenteditable="true">${amirUnvani}</span></td></tr></table></div></div></div>`; allPagesHTML += pageHTML }); if (allPagesHTML === '') { showToast(`Seçilen aylar için geçerli bir kontrol günü bulunamadı.`, "warning"); return null } return allPagesHTML }
+        function generateKontrolPuantajHTML() { const selectedMonths = Array.from(document.getElementById('kontrolMonthFilter').selectedOptions).map(opt => parseInt(opt.value)); const year = parseInt(document.getElementById('budgetYear').value); const maxControlDays = parseInt(document.getElementById('maxControlDays').value) || 0; if (selectedMonths.length === 0) { showToast("Lütfen en az bir rapor ayı seçin.", "warning"); return null } let validControlDays = getValidKontrolDays(selectedMonths, year);
+            // MOD açıksa araziye gidilen günleri de kontrol listesine ekle (tekrar ekleme kontrolü yap)
+            if (syncAraziToKontrolModEnabled) {
+                const additional = [];
+                document.querySelectorAll('.travel-card').forEach(row => {
+                    if (row.querySelector('input[name*="gorevTipi"]:checked')?.value !== 'normal') return;
+                    const type = row.querySelector('.gorev-tipi-select').value;
+                    const pushIfInSelected = (d) => {
+                        if (!d) return;
+                        if (selectedMonths.includes(d.getMonth() + 1) && d.getFullYear() === year) {
+                            const key = toYYYYMMDD(d);
+                            const exists = validControlDays.some(v => toYYYYMMDD(v) === key) || additional.some(v => toYYYYMMDD(v) === key);
+                            if (!exists) additional.push(new Date(d));
+                        }
+                    };
+                    if (type === 'gunubirlik') { const dateStr = row.querySelector('.travel-date').value; if (dateStr) pushIfInSelected(new Date(dateStr)); }
+                    else { const s = row.querySelector('.coklu-start-date').value; const e = row.querySelector('.coklu-end-date').value; if (s && e) { for (let d = new Date(s); d <= new Date(e); d.setDate(d.getDate() + 1)) { pushIfInSelected(new Date(d)); } } }
+                });
+                if (additional.length) {
+                    validControlDays = validControlDays.concat(additional).sort((a, b) => a - b);
+                }
+            }
+            const kontrolTuru = document.getElementById("kontrolTuru").value || "Belge Kontrolü"; const kontrolMevzuat = document.getElementById("kontrolMevzuat").value || "4915"; const kontrolBaslangic = document.getElementById("kontrolBaslangic").value || "09:00"; const kontrolBitis = document.getElementById("kontrolBitis").value || "16:00"; const kontrolAciklama = document.getElementById("kontrolAciklama").value || ""; const amirAdi = document.getElementById("kontrolAmirAdi").value || document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("kontrolAmirUnvani").value || document.getElementById("amirUnvani").value; let allPagesHTML = ''; selectedMonths.forEach(month => { let daysForMonth = validControlDays.filter(d => d.getMonth() + 1 === month); if (daysForMonth.length === 0) return; const rowsPerPage = 23; const totalPages = Math.ceil(daysForMonth.length / rowsPerPage); console.log(`Kontrol Puantaj - Toplam ${daysForMonth.length} gün, ${totalPages} sayfa oluşturulacak (limit: ${maxControlDays || 'yok'})`); for (let pageNum = 0; pageNum < totalPages; pageNum++) { const startIdx = pageNum * rowsPerPage; const endIdx = Math.min(startIdx + rowsPerPage, daysForMonth.length); const isLastPage = (pageNum === totalPages - 1); console.log(`Sayfa ${pageNum + 1}: ${startIdx}-${endIdx} arası (${endIdx - startIdx} satır), Son sayfa: ${isLastPage}`); let dutyRows = ''; for (let i = startIdx; i < endIdx; i++) { const day = daysForMonth[i]; dutyRows += `<tr><td contenteditable="true">${day.toLocaleDateString('tr-TR')}</td><td contenteditable="true">${kontrolTuru}</td><td contenteditable="true">${kontrolMevzuat}</td><td class="aciklama-cell" contenteditable="true">${kontrolAciklama}</td><td contenteditable="true">${kontrolBaslangic}</td><td contenteditable="true">${kontrolBitis}</td></tr>` } const remainingRows = rowsPerPage - (endIdx - startIdx); for (let i = 0; i < remainingRows; i++) { dutyRows += `<tr><td style="height: 20px;">&nbsp;</td><td></td><td></td><td></td><td></td><td></td></tr>` } const pageHTML = `<div class="report-sheet-wrapper"><div class="report-sheet report-sheet-A4-portrait"><div class="report-content"><h3 style="margin-bottom: 5px;">KONTROL HİZMETLERİNE İLİŞKİN PUANTAJ TABLOSU (EK-1)</h3><h4 style="margin-bottom: 8px;">(Değişik:1/2/2024 tarihli ve 12843329 sayılı Olur/6.md)</h4><table class="no-border" style="width: 100%; font-size: 11px; margin-bottom: 8px;"><tr><td style="text-align: right;"><b>Ait Olduğu Yıl:</b> ${year} &nbsp;&nbsp; <b>Ay:</b> ${turkceAylar[month - 1]}${totalPages > 1 ? ` &nbsp;&nbsp; <b>Sayfa:</b> ${pageNum + 1}/${totalPages}` : ''}</td></tr></table><table class="main-table"><thead><tr><th rowspan="2" style="width:12%">Tarih</th><th rowspan="2" style="width:15%">Kontrol Türü (1)</th><th rowspan="2" style="width:10%">Kontrol Türünün Dayandığı Mevzuat (2)</th><th rowspan="2" style="width:45%">Açıklama</th><th colspan="2" style="width:18%">Saat Aralığı</th></tr><tr><th style="width:9%">Başlangıç</th><th style="width:9%">Bitiş</th></tr></thead><tbody>${dutyRows}</tbody></table>${isLastPage ? `<table class="imza-table" style="margin-top: 10px;"><tr><td style="width: 50%;">&nbsp;</td><td style="width: 50%; text-align: right; padding-right: 20px;"><div style="display: inline-block; text-align: center; font-size: 10px;">Kontrol Görevini Yürüten Personel<br>...../...../${year}<br><br><b contenteditable="true">${document.getElementById("fullName").value}</b><br><span contenteditable="true">${document.getElementById("title").value}</span></div></td></tr><tr><td colspan="2" style="text-align: center; padding-top: 15px; font-size: 10px;">...../...../${year}<br><br><b contenteditable="true">${amirAdi}</b><br><span contenteditable="true">${amirUnvani}</span></td></tr></table>` : ''}</div></div></div>`; allPagesHTML += pageHTML } }); if (allPagesHTML === '') { showToast(`Seçilen aylar için geçerli bir kontrol günü bulunamadı.`, "warning"); return null } console.log('Kontrol Puantaj HTML oluşturuldu, toplam sayfa sayısı kontrol edilebilir'); return allPagesHTML }
 
         function generateKontrolCizelgeHTML() {
-            const selectedMonths = Array.from(document.getElementById('kontrolMonthFilter').selectedOptions).map(opt => parseInt(opt.value)); const year = parseInt(document.getElementById('budgetYear').value); const maxControlDays = parseInt(document.getElementById('maxControlDays').value) || 0; if (selectedMonths.length === 0) { showToast("Lütfen en az bir rapor ayı seçin.", "warning"); return null } const validControlDays = getValidKontrolDays(selectedMonths, year); const amirAdi = document.getElementById("kontrolAmirAdi").value || document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("kontrolAmirUnvani").value || document.getElementById("amirUnvani").value; const monthNames = selectedMonths.map(m => turkceAylar[m - 1]).join(', '); let reportHTML = `<h3>İLAVE KONTROL HİZMETLERİ KAPSAMINDA ÇALIŞILAN PERSONELİN ÇALIŞTIĞI GÜNLERİ GÖSTERİR ÇİZELGE</h3>`; reportHTML += `<table class="info-table"><tr><td style="width: 80px;"><b>Kurum</b></td><td style="width: 10px;">:</td><td>${document.getElementById("department").value}</td><td style="width: 120px; text-align: right;"><b>Ait Olduğu Ay</b></td><td style="width: 10px;">:</td><td style="width: 150px;">${monthNames}</td></tr><tr><td><b>İş Yeri</b></td><td>:</td><td>${document.getElementById("birim").value}</td><td style="text-align: right;"><b>Bütçe Yılı</b></td><td>:</td><td>${year}</td></tr></table>`; let dayHeaders = ''; for (let i = 1; i <= 31; i++) { dayHeaders += `<th class="day-cell">${i}</th>` }
+            const selectedMonths = Array.from(document.getElementById('kontrolMonthFilter').selectedOptions).map(opt => parseInt(opt.value)); const year = parseInt(document.getElementById('budgetYear').value); const maxControlDays = parseInt(document.getElementById('maxControlDays').value) || 0; if (selectedMonths.length === 0) { showToast("Lütfen en az bir rapor ayı seçin.", "warning"); return null } let validControlDays = getValidKontrolDays(selectedMonths, year);
+            // Eğer mod açıksa, arazi (travel-card) günlerini de kontrol günleri listesine ekle (varsa tekrar eklemeyi önle)
+            if (syncAraziToKontrolModEnabled) {
+                const additional = [];
+                document.querySelectorAll('.travel-card').forEach(row => {
+                    if (row.querySelector('input[name*="gorevTipi"]:checked')?.value !== 'normal') return;
+                    const type = row.querySelector('.gorev-tipi-select').value;
+                    const pushIfInSelected = (d) => {
+                        if (!d) return;
+                        if (selectedMonths.includes(d.getMonth() + 1) && d.getFullYear() === year) {
+                            const key = toYYYYMMDD(d);
+                            const exists = validControlDays.some(v => toYYYYMMDD(v) === key) || additional.some(v => toYYYYMMDD(v) === key);
+                            if (!exists) additional.push(new Date(d));
+                        }
+                    };
+                    if (type === 'gunubirlik') { const dateStr = row.querySelector('.travel-date').value; if (dateStr) pushIfInSelected(new Date(dateStr)); }
+                    else { const s = row.querySelector('.coklu-start-date').value; const e = row.querySelector('.coklu-end-date').value; if (s && e) { for (let d = new Date(s); d <= new Date(e); d.setDate(d.getDate() + 1)) { pushIfInSelected(new Date(d)); } } }
+                });
+                if (additional.length) {
+                    validControlDays = validControlDays.concat(additional).sort((a, b) => a - b);
+                }
+            }
+            const amirAdi = document.getElementById("kontrolAmirAdi").value || document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("kontrolAmirUnvani").value || document.getElementById("amirUnvani").value; const monthNames = selectedMonths.map(m => turkceAylar[m - 1]).join(', '); let reportHTML = `<h3>İLAVE KONTROL HİZMETLERİ KAPSAMINDA ÇALIŞILAN PERSONELİN ÇALIŞTIĞI GÜNLERİ GÖSTERİR ÇİZELGE</h3>`; reportHTML += `<table class="info-table"><tr><td style="width: 80px;"><b>Kurum</b></td><td style="width: 10px;">:</td><td>${document.getElementById("department").value}</td><td style="width: 120px; text-align: right;"><b>Ait Olduğu Ay</b></td><td style="width: 10px;">:</td><td style="width: 150px;">${monthNames}</td></tr><tr><td><b>İş Yeri</b></td><td>:</td><td>${document.getElementById("birim").value}</td><td style="text-align: right;"><b>Bütçe Yılı</b></td><td>:</td><td>${year}</td></tr></table>`; let dayHeaders = ''; for (let i = 1; i <= 31; i++) { dayHeaders += `<th class="day-cell">${i}</th>` }
             let monthRowsHTML = ''; const numMonths = selectedMonths.length; if (numMonths > 0) {
                 selectedMonths.forEach((month, index) => {
                     let daysForThisMonth = validControlDays.filter(d => d.getMonth() + 1 === month).map(d => d.getDate()); if (maxControlDays > 0 && daysForThisMonth.length > maxControlDays) { daysForThisMonth = daysForThisMonth.slice(0, maxControlDays) } let dayCells = ''; for (let i = 1; i <= 31; i++) { dayCells += `<td class="day-cell">${daysForThisMonth.includes(i) ? 'X' : ''}</td>` }
@@ -7787,7 +8112,7 @@ const styles = `
         function generateAraziIfaHTML() {
             const period = document.getElementById("araziDonem").value; const year = parseInt(document.getElementById("budgetYear").value); const görevYeri = document.getElementById("görevYeri").value || "Sinop"; const amirAdi = document.getElementById("araziAmirAdi").value || document.getElementById("amirAdi").value; const amirUnvani = document.getElementById("araziAmirUnvani").value || document.getElementById("amirUnvani").value; const periodMap = { 1: [0, 2], 2: [3, 5], 3: [6, 8], 4: [9, 11] }; const [startMonth, endMonth] = periodMap[period];
             let dutyDays = getDutyDaysForPeriod(startMonth, endMonth).filter(day => !araziDaysMovedToKontrol.has(toYYYYMMDD(day.date)));
-            const periodName = `${period}. Dönem`; const monthYear = `${turkceAylar[startMonth]}, ${turkceAylar[startMonth + 1]}, ${turkceAylar[endMonth]} ${year}`; let dutyRows = ''; dutyDays.forEach((day, index) => { dutyRows += `<tr><td class="center">${index + 1}</td><td class="center">${day.date.toLocaleDateString("tr-TR")}</td><td>${turkceGunler[day.date.getDay()]}</td><td>${day.route}</td><td>${day.konu}</td></tr>` }); for (let i = dutyDays.length; i < 30; i++) { dutyRows += `<tr><td class="center">${i + 1}</td><td></td><td></td><td></td><td></td></tr>` } return `<div style="text-align:center; margin-bottom:20px;"><h3>3 AYLIK ÖZEL HİZMET TAZMİNATI</h3></div><table class="no-border header-info"><tr><td style="width:15%;"><b>MÜDÜRLÜĞÜ</b></td><td style="width:2%;">:</td><td style="width:50%;">${document.getElementById("department").value}</td><td style="width:15%;"><b>DÖNEMİ</b></td><td style="width:2%;">:</td><td>${periodName}</td></tr><tr><td><b>BİRİMİ</b></td><td>:</td><td>${document.getElementById("birim").value}</td><td style="width:15%;"><b>AY-YIL</b></td><td style="width:2%;">:</td><td>${monthYear}</td></tr><tr><td><b>ADI SOYADI</b></td><td>:</td><td>${document.getElementById("fullName").value}</td></tr><tr><td><b>UNVANI</b></td><td>:</td><td>${document.getElementById("title").value}</td></tr></table><table class="main-table"><thead><tr><th style="width: 8%;">SIRA NO</th><th style="width: 15%;">TARİH</th><th style="width: 15%;">GÜN</th><th style="width: 22%;">GÖREV YERİ</th><th style="width: 40%;">GÖREV KONUSU</th></tr></thead><tbody>${dutyRows}</tbody></table><p style="margin-top:20px; font-size:11px;">Yukarıda adı belirtilen teknik personel tarih, gün, görev yeri ve görevin konusunun belirtildiği görevleri ifa etmiştir.</p><table class="no-border" style="width:100%; margin-top:50px;"><tr><td colspan="2" style="text-align:right; padding-right: 20px;"><div style="display:inline-block; text-align:right;"><b contenteditable="true">${document.getElementById("fullName").value}</b><br><div style="text-align:center;" contenteditable="true">${document.getElementById("title").value}</div></div></td></tr><tr><td colspan="2" style="text-align:center; padding-top:40px;">....../....../${year}<br><br><br><b contenteditable="true">${amirAdi}</b><br><span contenteditable="true">${amirUnvani}</span></td></tr></table>`
+            const periodName = `${period}. Dönem`; const monthYear = `${turkceAylar[startMonth]}, ${turkceAylar[startMonth + 1]}, ${turkceAylar[endMonth]} ${year}`; let dutyRows = ''; dutyDays.forEach((day, index) => { dutyRows += `<tr><td class="center">${index + 1}</td><td class="center">${day.date.toLocaleDateString("tr-TR")}</td><td>${turkceGunler[day.date.getDay()]}</td><td>${day.route}</td><td>${day.konu}</td></tr>` }); for (let i = dutyDays.length; i < 31; i++) { dutyRows += `<tr><td class="center">${i + 1}</td><td></td><td></td><td></td><td></td></tr>` } return `<div style="text-align:center; margin-bottom:20px;"><h3>3 AYLIK ÖZEL HİZMET TAZMİNATI</h3></div><table class="no-border header-info"><tr><td style="width:15%;"><b>MÜDÜRLÜĞÜ</b></td><td style="width:2%;">:</td><td style="width:50%;">${document.getElementById("department").value}</td><td style="width:15%;"><b>DÖNEMİ</b></td><td style="width:2%;">:</td><td>${periodName}</td></tr><tr><td><b>BİRİMİ</b></td><td>:</td><td>${document.getElementById("birim").value}</td><td style="width:15%;"><b>AY-YIL</b></td><td style="width:2%;">:</td><td>${monthYear}</td></tr><tr><td><b>ADI SOYADI</b></td><td>:</td><td>${document.getElementById("fullName").value}</td></tr><tr><td><b>UNVANI</b></td><td>:</td><td>${document.getElementById("title").value}</td></tr></table><table class="main-table"><thead><tr><th style="width: 8%;">SIRA NO</th><th style="width: 15%;">TARİH</th><th style="width: 15%;">GÜN</th><th style="width: 22%;">GÖREV YERİ</th><th style="width: 40%;">GÖREV KONUSU</th></tr></thead><tbody>${dutyRows}</tbody></table><p style="margin-top:10px; font-size:10px;">Yukarıda adı belirtilen teknik personel tarih, gün, görev yeri ve görevin konusunun belirtildiği görevleri ifa etmiştir.</p><table class="no-border" style="width:100%; margin-top:20px;"><tr><td colspan="2" style="text-align:right; padding-right: 20px;"><div style="display:inline-block; text-align:right;">....../....../${year}<br><br><b contenteditable="true">${document.getElementById("fullName").value}</b><br><div style="text-align:center;" contenteditable="true">${document.getElementById("title").value}</div></div></td></tr><tr><td colspan="2" style="text-align:center; padding-top:20px;">....../....../${year}<br><br><br><b contenteditable="true">${amirAdi}</b><br><span contenteditable="true">${amirUnvani}</span></td></tr></table>`
         }
 
         function generateAraziPuantajHTML() {
@@ -8578,7 +8903,7 @@ const styles = `
                             transport: transport
                         });
                     });
-                    const dataToSave = JSON.stringify({ centralInfo, travelList, excludedAraziDays: Array.from(araziDaysMovedToKontrol) });
+                    const dataToSave = JSON.stringify({ centralInfo, travelList, excludedAraziDays: Array.from(araziDaysMovedToKontrol), syncAraziToKontrolModEnabled: !!syncAraziToKontrolModEnabled });
                     localStorage.setItem('reportingAppData_' + currentProfile, encodeData(dataToSave));
 
                     const allRoutes = new Set();
@@ -8617,12 +8942,31 @@ const styles = `
             }
         }
 
+        function saveMaxControlDays() {
+            const value = document.getElementById('maxControlDays').value;
+            localStorage.setItem('maxControlDays', value);
+        }
+
+        function loadMaxControlDays() {
+            const saved = localStorage.getItem('maxControlDays');
+            if (saved !== null) {
+                document.getElementById('maxControlDays').value = saved;
+            }
+        }
+
         function loadData() {
             if (!currentProfile) return;
             const encodedData = localStorage.getItem('reportingAppData_' + currentProfile);
             const data = encodedData ? JSON.parse(decodeData(encodedData)) : null;
 
             araziDaysMovedToKontrol = new Set(data?.excludedAraziDays || []);
+            // Eğer daha önce kaydedilmişse sync mod ayarını yükle; aksi halde varsayılan (ilk açılış) korunur
+            if (data && Object.prototype.hasOwnProperty.call(data, 'syncAraziToKontrolModEnabled')) {
+                syncAraziToKontrolModEnabled = !!data.syncAraziToKontrolModEnabled;
+            }
+            
+            // maxControlDays değerini yükle
+            loadMaxControlDays();
 
             const profileDefaults = profiles[currentProfile].defaults;
             const profileSigners = profiles[currentProfile].signers;
@@ -8659,7 +9003,62 @@ const styles = `
             updateDefaultReportPeriods();
             updateTravelCounter();
             updateAppTitle();
+            // loadData sonrası sync butonunu güncelle (MOD durumu görünürlüğünü uygular)
+            try { updateSyncToggleUI(); } catch (e) {}
         }
+
+        // ---- Yeni: Arazi ⇄ Kontrol Senkronizasyonu MOD Kontrol Fonksiyonları ----
+        function saveMaxControlDays() {
+            const value = document.getElementById('maxControlDays').value;
+            localStorage.setItem('maxControlDays', value);
+        }
+
+        function loadMaxControlDays() {
+            const saved = localStorage.getItem('maxControlDays');
+            if (saved !== null) {
+                document.getElementById('maxControlDays').value = saved;
+            }
+        }
+
+        function updateSyncToggleUI() {
+            const btn = document.getElementById('arazi-mode-btn');
+            if (!btn) return;
+            const managerWrapper = document.getElementById('manager-wrapper');
+            const labelEl = document.getElementById('arazi-mode-label');
+            const descEl = document.getElementById('arazi-mode-desc');
+
+            if (syncAraziToKontrolModEnabled) {
+                btn.classList.add('sync-on');
+                btn.setAttribute('title', 'Çift Tazminat Modu: AÇIK — Arazi günleri hem arazi hem kontrol tazminatında yer alır');
+                if (managerWrapper) {
+                    managerWrapper.style.opacity = '0';
+                    setTimeout(() => { if (managerWrapper) managerWrapper.style.display = 'none'; }, 260);
+                }
+                if (labelEl) labelEl.textContent = 'Çift Tazminat Modu: AÇIK';
+                if (descEl) descEl.innerHTML = '<i data-lucide="info"></i><span>Araziye gidilen günler otomatik olarak her iki tazminatta görünür.</span>';
+            } else {
+                btn.classList.remove('sync-on');
+                btn.setAttribute('title', 'Çift Tazminat Modu: KAPALI — Arazi ve kontrol tazminatları ayrı tutulur');
+                if (managerWrapper) {
+                    managerWrapper.style.display = 'block';
+                    // allow next frame to animate opacity
+                    requestAnimationFrame(() => { if (managerWrapper) managerWrapper.style.opacity = '1'; });
+                }
+                if (labelEl) labelEl.textContent = 'Çift Tazminat Modu: KAPALI';
+                if (descEl) descEl.innerHTML = '<i data-lucide="info"></i><span>Günler arazi veya kontrol tazminatında yer alır. Aşağıdaki buton ile düzenleyin.</span>';
+            }
+            try { lucide.createIcons(); } catch (e) {}
+        }
+
+        function toggleSyncAraziKontrol() {
+            syncAraziToKontrolModEnabled = !syncAraziToKontrolModEnabled;
+            updateSyncToggleUI();
+            saveData();
+            showToast(syncAraziToKontrolModEnabled ? 'Çift Tazminat Modu AÇIK: Günler her iki tazminatta görünür.' : 'Çift Tazminat Modu KAPALI: Tazminatlar ayrı tutulur.', 'success');
+        }
+
+        // İlk yüklemede buton durumunu güncelle
+        setTimeout(updateSyncToggleUI, 300);
 
         function setupTabs() {
             const tabButtons = document.querySelectorAll('.tab-btn');
@@ -9115,7 +9514,7 @@ const styles = `
             // Bilgilendirme metni ekle
             const yollukInfo = document.createElement('div');
             yollukInfo.className = 'month-selector-info';
-            yollukInfo.innerHTML = '<i data-lucide="info"></i><span>Çoklu seçim için ay butonlarına tıklayın</span>';
+            yollukInfo.innerHTML = '<i data-lucide="info"></i><span>Çoklu seçim için ay düğmelerine tıklayın</span>';
             yollukContainer.parentNode.insertBefore(yollukInfo, yollukContainer.nextSibling);
 
             // Kontrol ay seçici
@@ -9145,7 +9544,7 @@ const styles = `
             // Bilgilendirme metni ekle
             const kontrolInfo = document.createElement('div');
             kontrolInfo.className = 'month-selector-info';
-            kontrolInfo.innerHTML = '<i data-lucide="info"></i><span>Çoklu seçim için ay butonlarına tıklayın</span>';
+            kontrolInfo.innerHTML = '<i data-lucide="info"></i><span>Çoklu seçim için ay düğmelerine tıklayın</span>';
             kontrolContainer.parentNode.insertBefore(kontrolInfo, kontrolContainer.nextSibling);
 
             // İkonları yenile
@@ -9190,7 +9589,7 @@ const styles = `
             // Bilgilendirme metni ekle
             const periodInfo = document.createElement('div');
             periodInfo.className = 'month-selector-info';
-            periodInfo.innerHTML = '<i data-lucide="info"></i><span>Tazminat döneminizi seçin</span>';
+            periodInfo.innerHTML = '<i data-lucide="info"></i><span>Dönemi seçmek için düğmelere tıklayın</span>';
             periodContainer.parentNode.insertBefore(periodInfo, periodContainer.nextSibling);
 
             lucide.createIcons();
